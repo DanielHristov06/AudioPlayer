@@ -418,3 +418,5 @@ FodyWeavers.xsd
 *.msp
 
 CMakeSettings.json
+
+test_sounds/
