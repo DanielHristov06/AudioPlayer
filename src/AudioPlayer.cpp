@@ -15,13 +15,13 @@ AudioPlayer::~AudioPlayer() {
 	ma_engine_uninit(&mEngine);
 }
 
-bool AudioPlayer::play(const char* path) {
+bool AudioPlayer::play(const std::string& path) {
 	if (mHasSound) {
 		ma_sound_uninit(&mCurrentSound);
 		mHasSound = false;
 	}
 
-	if (ma_sound_init_from_file(&mEngine, path, NULL, NULL, NULL, &mCurrentSound) != MA_SUCCESS) {
+	if (ma_sound_init_from_file(&mEngine, path.c_str(), NULL, NULL, NULL, &mCurrentSound) != MA_SUCCESS) {
 		std::println("Failed to load sound from: {}\n", path);
 		return false;
 	}
