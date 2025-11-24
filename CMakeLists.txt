@@ -31,7 +31,21 @@ target_include_directories(AudioPlayer PRIVATE
     "${VENDORS_DIR}/tinyfiledialogs"
     "${VENDORS_DIR}/glfw/include"
     "${VENDORS_DIR}/glad/include"
+    "${VENDORS_DIR}/imgui"
+    "${VENDORS_DIR}/imgui/backends"
 )
+
+target_sources(AudioPlayer PRIVATE
+    "${VENDORS_DIR}/imgui/imgui.cpp"
+    "${VENDORS_DIR}/imgui/imgui_draw.cpp"
+    "${VENDORS_DIR}/imgui/imgui_tables.cpp"
+    "${VENDORS_DIR}/imgui/imgui_widgets.cpp"
+    "${VENDORS_DIR}/imgui/backends/imgui_impl_glfw.cpp"
+    "${VENDORS_DIR}/imgui/backends/imgui_impl_opengl3.cpp"
+    "${VENDORS_DIR}/imgui/imgui_demo.cpp"
+)
+
+target_compile_definitions(AudioPlayer PRIVATE IMGUI_IMPL_OPENGL_LOADER_GLAD GLFW_INCLUDE_NONE)
 
 target_link_libraries(AudioPlayer PRIVATE miniaudio tinyfiledialogs)
 
