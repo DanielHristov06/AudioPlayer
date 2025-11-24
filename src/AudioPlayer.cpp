@@ -4,11 +4,16 @@
 AudioPlayer::AudioPlayer() {
 	if (ma_engine_init(NULL, &mEngine) != MA_SUCCESS) {
 		std::println("Failed to init audio engine.\n");
+		mEngineInitialized = false;
 		return;
 	}
+
+	mEngineInitialized = true;
 }
 
 AudioPlayer::~AudioPlayer() {
+	if (!mEngineInitialized) return;
+
 	if (mHasSound) {
 		ma_sound_uninit(&mCurrentSound);
 	}
@@ -16,6 +21,8 @@ AudioPlayer::~AudioPlayer() {
 }
 
 bool AudioPlayer::play(const std::string& path) {
+	if (!checkInit()) return false;
+
 	if (mHasSound) {
 		ma_sound_uninit(&mCurrentSound);
 		mHasSound = false;
@@ -32,6 +39,8 @@ bool AudioPlayer::play(const std::string& path) {
 }
 
 bool AudioPlayer::stop() {
+	if (!checkInit()) return false;
+
 	if (mHasSound) {
 		ma_sound_stop(&mCurrentSound);
 		ma_sound_uninit(&mCurrentSound);
@@ -42,6 +51,8 @@ bool AudioPlayer::stop() {
 }
 
 bool AudioPlayer::pause() {
+	if (!checkInit()) return false;
+
 	if (mHasSound) {
 		ma_sound_stop(&mCurrentSound);
 		return true;
@@ -50,9 +61,19 @@ bool AudioPlayer::pause() {
 }
 
 bool AudioPlayer::resume() {
+	if (!checkInit()) return false;
+
 	if (mHasSound) {
 		ma_sound_start(&mCurrentSound);
 		return true;
 	}
 	return false;
+}
+
+bool AudioPlayer::checkInit() {
+	if (!mEngineInitialized) {
+		std::println("Audio engine is not initialized.");
+		return false;
+	}
+	return true;
 }
