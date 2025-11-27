@@ -5,8 +5,14 @@
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
 #include "imgui_internal.h"
+#include "LibraryManager.h"
+#include "AudioPlayer.h"
+#include "TextureLoader.h"
 
 int main() {
+	LibraryManager manager;
+	AudioPlayer player;
+
 	if (!glfwInit()) {
 		std::println("Could not initialize GLFW.\n");
 		return -1;
@@ -36,6 +42,8 @@ int main() {
 		std::println("Could not initialize GLAD.\n");
 		return -1;
 	}
+
+	GLuint playIcon = loadTexture(std::string(TEXTURE_DIR) + "/play.png");
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -83,7 +91,7 @@ int main() {
 				ImGuiID dockMain = dockspaceId;
 				ImGuiID dockBottom{}, dockLeft{};
 
-				ImGui::DockBuilderSplitNode(dockMain, ImGuiDir_Down, 0.20f, &dockBottom, &dockMain);
+				ImGui::DockBuilderSplitNode(dockMain, ImGuiDir_Down, 0.15f, &dockBottom, &dockMain);
 				ImGui::DockBuilderSplitNode(dockMain, ImGuiDir_Left, 0.20f, &dockLeft, &dockMain);
 				ImGui::DockBuilderGetNode(dockBottom)->LocalFlags |= ImGuiDockNodeFlags_NoTabBar;
 				ImGui::DockBuilderGetNode(dockLeft)->LocalFlags |= ImGuiDockNodeFlags_NoTabBar;
@@ -98,11 +106,30 @@ int main() {
 		}
 
 		ImGui::Begin("Player");
-		ImGui::Text("OpenGL: %s", glGetString(GL_VERSION));
+		int size = 48;
+		ImGui::SetCursorPosX((ImGui::GetWindowSize().x - size) * 0.5f);
+		ImGui::SetCursorPosY((ImGui::GetWindowSize().y - size) * 0.5f - 10);
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
+		bool pressed = ImGui::ImageButton("PlayButton", ImTextureRef((ImTextureID)playIcon), ImVec2(size, size));
+		ImGui::PopStyleColor(3);
 		ImGui::End();
 
+		static int selectedIndex = -1;
 		ImGui::Begin("Songs");
-		ImGui::Text("OpenGL: %s", glGetString(GL_VERSION));
+		ImGui::BeginChild("SongList", ImVec2(0, 0), true);
+		
+		for (int i = 0; i < manager.mSongs.size(); i++) {
+			const auto& song = manager.mSongs[i];
+
+			if (ImGui::Selectable(song.stem().string().c_str(), selectedIndex == i)) {
+				selectedIndex = i;
+				player.play(song.string());
+			}
+		}
+
+		ImGui::EndChild();
 		ImGui::End();
 
 		ImGui::Render();

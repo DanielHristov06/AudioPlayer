@@ -16,6 +16,9 @@ target_include_directories(miniaudio PRIVATE "${VENDORS_DIR}/miniaudio")
 add_library(tinyfiledialogs STATIC "${VENDORS_DIR}/tinyfiledialogs/tinyfiledialogs.c")
 target_include_directories(tinyfiledialogs PRIVATE "${VENDORS_DIR}/tinyfiledialogs")
 
+add_library(stbimage STATIC "${VENDORS_DIR}/stb_image/stb_image.c")
+target_include_directories(stbimage PRIVATE "${VENDORS_DIR}/stb_image")
+
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
@@ -29,6 +32,7 @@ target_include_directories(AudioPlayer PRIVATE
     "${INCLUDE_DIR}"
     "${VENDORS_DIR}/miniaudio"
     "${VENDORS_DIR}/tinyfiledialogs"
+    "${VENDORS_DIR}/stb_image"
     "${VENDORS_DIR}/glfw/include"
     "${VENDORS_DIR}/glad/include"
     "${VENDORS_DIR}/imgui"
@@ -45,9 +49,10 @@ target_sources(AudioPlayer PRIVATE
     "${VENDORS_DIR}/imgui/imgui_demo.cpp"
 )
 
+target_compile_definitions(AudioPlayer PRIVATE TEXTURE_DIR=\"${CMAKE_SOURCE_DIR}/textures\")
 target_compile_definitions(AudioPlayer PRIVATE IMGUI_IMPL_OPENGL_LOADER_GLAD GLFW_INCLUDE_NONE)
 
-target_link_libraries(AudioPlayer PRIVATE miniaudio tinyfiledialogs)
+target_link_libraries(AudioPlayer PRIVATE miniaudio tinyfiledialogs stbimage)
 
 if (WIN32)
     target_link_libraries(AudioPlayer PRIVATE glfw opengl32)
