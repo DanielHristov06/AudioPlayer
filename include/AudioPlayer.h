@@ -18,7 +18,7 @@ public:
 	bool resume();
 
 private:
-	bool checkInit();
+	bool checkInit() const;
 
 	ma_engine mEngine{};
 	ma_sound mCurrentSound{};

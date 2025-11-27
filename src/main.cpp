@@ -4,6 +4,7 @@
 #include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
+#include "imgui_internal.h"
 
 int main() {
 	if (!glfwInit()) {
@@ -69,15 +70,38 @@ int main() {
 			ImGui::Begin("DockSpaceHost", nullptr, dockspaceFlags);
 			ImGui::PopStyleVar(2);
 
-			ImGuiID dockspaceId = ImGui::GetID("Dockspace");
+			const ImGuiID dockspaceId = ImGui::GetID("Dockspace");
+			
+			static bool firstTime = true;
+			if (firstTime) {
+				firstTime = false;
+
+				ImGui::DockBuilderRemoveNode(dockspaceId);
+				ImGui::DockBuilderAddNode(dockspaceId, ImGuiDockNodeFlags_DockSpace);
+				ImGui::DockBuilderSetNodeSize(dockspaceId, viewport->Size);
+
+				ImGuiID dockMain = dockspaceId;
+				ImGuiID dockBottom{}, dockLeft{};
+
+				ImGui::DockBuilderSplitNode(dockMain, ImGuiDir_Down, 0.20f, &dockBottom, &dockMain);
+				ImGui::DockBuilderSplitNode(dockMain, ImGuiDir_Left, 0.20f, &dockLeft, &dockMain);
+				ImGui::DockBuilderGetNode(dockBottom)->LocalFlags |= ImGuiDockNodeFlags_NoTabBar;
+				ImGui::DockBuilderGetNode(dockLeft)->LocalFlags |= ImGuiDockNodeFlags_NoTabBar;
+				ImGui::DockBuilderDockWindow("Player", dockBottom);
+				ImGui::DockBuilderDockWindow("Songs", dockLeft);
+				ImGui::DockBuilderFinish(dockspaceId);
+			}
+
 			ImGui::DockSpace(dockspaceId, ImVec2(0.0f, 0.0f));
 
 			ImGui::End();
 		}
 
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.0f);
-		ImGui::Begin("Hello World");
-		ImGui::PopStyleVar(1);
+		ImGui::Begin("Player");
+		ImGui::Text("OpenGL: %s", glGetString(GL_VERSION));
+		ImGui::End();
+
+		ImGui::Begin("Songs");
 		ImGui::Text("OpenGL: %s", glGetString(GL_VERSION));
 		ImGui::End();
 

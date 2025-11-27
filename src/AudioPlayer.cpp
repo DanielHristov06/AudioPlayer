@@ -70,7 +70,7 @@ bool AudioPlayer::resume() {
 	return false;
 }
 
-bool AudioPlayer::checkInit() {
+bool AudioPlayer::checkInit() const {
 	if (!mEngineInitialized) {
 		std::println("Audio engine is not initialized.");
 		return false;
