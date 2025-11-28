@@ -44,6 +44,7 @@ int main() {
 	}
 
 	GLuint playIcon = loadTexture(std::string(TEXTURE_DIR) + "/play.png");
+	GLuint playIcon2 = loadTexture(std::string(TEXTURE_DIR) + "/play2.png");
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -106,13 +107,20 @@ int main() {
 		}
 
 		ImGui::Begin("Player");
-		int size = 48;
+		float size = ImGui::GetWindowSize().x * 0.05f;
+		size = std::clamp(size, 32.0f, 64.0f);
 		ImGui::SetCursorPosX((ImGui::GetWindowSize().x - size) * 0.5f);
 		ImGui::SetCursorPosY((ImGui::GetWindowSize().y - size) * 0.5f - 10);
-		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
-		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
-		bool pressed = ImGui::ImageButton("PlayButton", ImTextureRef((ImTextureID)playIcon), ImVec2(size, size));
+		const ImVec4 color(0, 0, 0, 0);
+		ImGui::PushStyleColor(ImGuiCol_Button, color);
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, color);
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, color);
+		ImVec2 pos = ImGui::GetCursorScreenPos();
+		ImVec2 sizeVec(size, size);
+		ImRect rect(pos, ImVec2(pos.x + sizeVec.x, pos.y + sizeVec.y));
+		bool hovered = rect.Contains(ImGui::GetIO().MousePos);
+		GLuint tex = hovered ? playIcon2 : playIcon;
+		bool pressed = ImGui::ImageButton("PlayButton", ImTextureRef((ImTextureID)tex), ImVec2(size, size));
 		ImGui::PopStyleColor(3);
 		ImGui::End();
 
