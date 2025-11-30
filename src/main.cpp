@@ -1,4 +1,5 @@
 #include <print>
+#include <format>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "imgui.h"
@@ -8,6 +9,13 @@
 #include "LibraryManager.h"
 #include "AudioPlayer.h"
 #include "TextureLoader.h"
+
+std::string formatTime(double& seconds) {
+	int s = static_cast<int>(seconds);
+	int min = s / 60;
+	int sec = s % 60;
+	return std::format("{}:{:02}", min, sec);
+}
 
 int main() {
 	LibraryManager manager;
@@ -44,7 +52,9 @@ int main() {
 	}
 
 	GLuint playIcon = loadTexture(std::string(TEXTURE_DIR) + "/play.png");
-	GLuint playIcon2 = loadTexture(std::string(TEXTURE_DIR) + "/play2.png");
+	GLuint playIconHovered = loadTexture(std::string(TEXTURE_DIR) + "/play2.png");
+	GLuint pauseIcon = loadTexture(std::string(TEXTURE_DIR) + "/pause.png");
+	GLuint pauseIconHovered = loadTexture(std::string(TEXTURE_DIR) + "/pause2.png");
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -107,21 +117,58 @@ int main() {
 		}
 
 		ImGui::Begin("Player");
-		float size = ImGui::GetWindowSize().x * 0.05f;
+
+		// Play Button
+		float size = ImGui::GetWindowSize().x * 0.04f;
 		size = std::clamp(size, 32.0f, 64.0f);
 		ImGui::SetCursorPosX((ImGui::GetWindowSize().x - size) * 0.5f);
-		ImGui::SetCursorPosY((ImGui::GetWindowSize().y - size) * 0.5f - 10);
+		ImGui::SetCursorPosY((ImGui::GetWindowSize().y - size) * 0.5f - 20.0f);
 		const ImVec4 color(0, 0, 0, 0);
 		ImGui::PushStyleColor(ImGuiCol_Button, color);
 		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, color);
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, color);
-		ImVec2 pos = ImGui::GetCursorScreenPos();
-		ImVec2 sizeVec(size, size);
-		ImRect rect(pos, ImVec2(pos.x + sizeVec.x, pos.y + sizeVec.y));
+		const ImVec2 pos = ImGui::GetCursorScreenPos();
+		const ImVec2 sizeVec(size, size);
+		const ImRect rect(pos, ImVec2(pos.x + sizeVec.x, pos.y + sizeVec.y));
 		bool hovered = rect.Contains(ImGui::GetIO().MousePos);
-		GLuint tex = hovered ? playIcon2 : playIcon;
-		bool pressed = ImGui::ImageButton("PlayButton", ImTextureRef((ImTextureID)tex), ImVec2(size, size));
+		GLuint tex{};
+		const bool paused = player.isPaused();
+		if (!paused) {
+			tex = hovered ? pauseIconHovered : pauseIcon;
+		}
+		else {
+			tex = hovered ? playIconHovered : playIcon;
+		}
+		if (ImGui::ImageButton("PlayButton", ImTextureRef((ImTextureID)tex), ImVec2(size, size))) {
+			if (paused) player.resume();
+			else player.pause();
+		}
 		ImGui::PopStyleColor(3);
+
+		// Progress Bar
+		double current = player.getCurrentTime();
+		double total = player.getTotalTime();
+		float progress = (total > 0.0) ? float(current / total) : 0.0f;
+		std::string leftTime = formatTime(current);
+		std::string rightTime = formatTime(total);
+		
+		ImVec2 playButPosX = ImGui::GetItemRectMin();
+		ImVec2 playButPosY = ImGui::GetItemRectMax();
+		float cursorX = playButPosX.x - ImGui::CalcTextSize(leftTime.c_str()).x - ImGui::GetContentRegionAvail().x / 4;
+		ImGui::SetCursorPosX(cursorX);
+
+		ImGui::Text(leftTime.c_str());
+		ImGui::SameLine();
+		ImGui::SetNextItemWidth(cursorX + ImGui::CalcTextSize(leftTime.c_str()).x + ImGui::CalcTextSize(leftTime.c_str()).x + ImGui::GetContentRegionAvail().x / 4);
+
+		if (ImGui::SliderFloat("##SongBar", &progress, 0.0f, 1.0f, "")) {
+			double newTime = progress * total;
+			player.seek(newTime);
+		}
+		ImGui::SameLine();
+
+		ImGui::Text(rightTime.c_str());
+
 		ImGui::End();
 
 		static int selectedIndex = -1;

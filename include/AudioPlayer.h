@@ -16,6 +16,11 @@ public:
 	bool stop();
 	bool pause();
 	bool resume();
+	bool isPaused() const;
+	bool seek(double seconds);
+
+	double getCurrentTime() const;
+	double getTotalTime() const;
 
 private:
 	bool checkInit() const;
@@ -24,4 +29,5 @@ private:
 	ma_sound mCurrentSound{};
 	bool mHasSound = false;
 	bool mEngineInitialized = false;
+	bool mPaused = false;
 };

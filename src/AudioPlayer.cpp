@@ -34,6 +34,7 @@ bool AudioPlayer::play(const std::string& path) {
 	}
 
 	mHasSound = true;
+	mPaused = false;
 	ma_sound_start(&mCurrentSound);
 	return true;
 }
@@ -45,6 +46,7 @@ bool AudioPlayer::stop() {
 		ma_sound_stop(&mCurrentSound);
 		ma_sound_uninit(&mCurrentSound);
 		mHasSound = false;
+		mPaused = false;
 		return true;
 	}
 	return false;
@@ -55,6 +57,7 @@ bool AudioPlayer::pause() {
 
 	if (mHasSound) {
 		ma_sound_stop(&mCurrentSound);
+		mPaused = true;
 		return true;
 	}
 	return false;
@@ -65,9 +68,42 @@ bool AudioPlayer::resume() {
 
 	if (mHasSound) {
 		ma_sound_start(&mCurrentSound);
+		mPaused = false;
 		return true;
 	}
 	return false;
+}
+
+bool AudioPlayer::isPaused() const {
+	if (!checkInit()) return false;
+	return mPaused;
+}
+
+bool AudioPlayer::seek(double seconds) {
+	if (!mHasSound || !checkInit()) return false;
+
+	if (seconds < 0.0) seconds = 0.0;
+	double total = getTotalTime();
+	if (seconds > total) seconds = total;
+
+	ma_result result = ma_sound_seek_to_second(&mCurrentSound, seconds);
+	return result == MA_SUCCESS;
+}
+
+double AudioPlayer::getCurrentTime() const {
+	if (!mHasSound || !checkInit()) return 0.0;
+
+	float cursor = 0.0f;
+	ma_sound_get_cursor_in_seconds(&mCurrentSound, &cursor);
+	return double(cursor);
+}
+
+double AudioPlayer::getTotalTime() const {
+	if (!mHasSound || !checkInit()) return 0.0;
+
+	float length = 0.0f;
+	ma_sound_get_length_in_seconds(&mCurrentSound, &length);
+	return double(length);
 }
 
 bool AudioPlayer::checkInit() const {

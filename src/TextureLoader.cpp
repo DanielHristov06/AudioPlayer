@@ -7,7 +7,7 @@ GLuint loadTexture(const std::string& filename) {
 	stbi_uc* data = stbi_load(filename.c_str(), &width, &height, &channels, 4);
 
 	if (!data) {
-		std::println("Failed to load image: {}\n", filename);
+		std::println("Failed to load image: {}\n because {}\n", filename, stbi_failure_reason());
 		return 0;
 	}
 
