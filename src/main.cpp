@@ -1,5 +1,4 @@
 #include <print>
-#include <format>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "imgui.h"
@@ -9,13 +8,7 @@
 #include "LibraryManager.h"
 #include "AudioPlayer.h"
 #include "TextureLoader.h"
-
-std::string formatTime(double& seconds) {
-	int s = static_cast<int>(seconds);
-	int min = s / 60;
-	int sec = s % 60;
-	return std::format("{}:{:02}", min, sec);
-}
+#include "Utils.h"
 
 int main() {
 	LibraryManager manager;
@@ -152,21 +145,31 @@ int main() {
 		std::string leftTime = formatTime(current);
 		std::string rightTime = formatTime(total);
 		
-		ImVec2 playButPosX = ImGui::GetItemRectMin();
-		ImVec2 playButPosY = ImGui::GetItemRectMax();
-		float cursorX = playButPosX.x - ImGui::CalcTextSize(leftTime.c_str()).x - ImGui::GetContentRegionAvail().x / 4;
-		ImGui::SetCursorPosX(cursorX);
+		const ImVec2 playButPosX = ImGui::GetItemRectMin();
+		const float fourth = ImGui::GetContentRegionAvail().x / 4;
+		const float cursorX = playButPosX.x - ImGui::CalcTextSize(leftTime.c_str()).x - fourth;
+		ImGui::SetCursorPosX(cursorX + fourth * 0.5f);
+		float y = ImGui::GetCursorPosY();
+		ImGui::SetCursorPosY(y + 10.0f);
 
 		ImGui::Text(leftTime.c_str());
 		ImGui::SameLine();
-		ImGui::SetNextItemWidth(cursorX + ImGui::CalcTextSize(leftTime.c_str()).x + ImGui::CalcTextSize(leftTime.c_str()).x + ImGui::GetContentRegionAvail().x / 4);
 
+		y = ImGui::GetCursorPosY();
+		ImGui::SetCursorPosY(y + 2.0f);
+		
+		const float barWidth = fourth + ImGui::GetContentRegionAvail().x / 2 - ImGui::CalcTextSize(rightTime.c_str()).x;
+		ImGui::SetNextItemWidth(barWidth - (fourth * 0.5f) * 2.0f);
+
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, -1.0f));
 		if (ImGui::SliderFloat("##SongBar", &progress, 0.0f, 1.0f, "")) {
 			double newTime = progress * total;
 			player.seek(newTime);
 		}
+		ImGui::PopStyleVar(1);
 		ImGui::SameLine();
 
+		ImGui::SetCursorPosY(y);
 		ImGui::Text(rightTime.c_str());
 
 		ImGui::End();
