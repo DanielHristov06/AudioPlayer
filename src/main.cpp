@@ -82,6 +82,13 @@ int main() {
 			ImGui::Begin("DockSpaceHost", nullptr, dockspaceFlags);
 			ImGui::PopStyleVar(2);
 
+			if (ImGui::BeginMenuBar()) {
+				if (ImGui::MenuItem("Import")) {
+					manager.import();
+				}
+			}
+			ImGui::EndMenuBar();
+
 			const ImGuiID dockspaceId = ImGui::GetID("Dockspace");
 			
 			static bool firstTime = true;
