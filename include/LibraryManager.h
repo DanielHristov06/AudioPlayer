@@ -10,6 +10,7 @@ public:
 
 	std::vector<fs::path> mSongs;
 	bool import();
+	bool erase(const fs::path& song);
 
 private:
 	const char* mFilters[3] = { "*.mp3", "*.wav", "*.ogg" };

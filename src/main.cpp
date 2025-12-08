@@ -45,10 +45,10 @@ int main() {
 		return -1;
 	}
 
-	GLuint playIcon = loadTextureFromMemory(play, playLen);
-	GLuint playIconHovered = loadTextureFromMemory(play2, play2Len);
-	GLuint pauseIcon = loadTextureFromMemory(pause, pauseLen);
-	GLuint pauseIconHovered = loadTextureFromMemory(pause2, pause2Len);
+	const GLuint playIcon = loadTextureFromMemory(play, playLen);
+	const GLuint playIconHovered = loadTextureFromMemory(play2, play2Len);
+	const GLuint pauseIcon = loadTextureFromMemory(pause, pauseLen);
+	const GLuint pauseIconHovered = loadTextureFromMemory(pause2, pause2Len);
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -149,9 +149,9 @@ int main() {
 		// Progress Bar
 		double current = player.getCurrentTime();
 		double total = player.getTotalTime();
-		float progress = (total > 0.0) ? float(current / total) : 0.0f;
-		std::string leftTime = formatTime(current);
-		std::string rightTime = formatTime(total);
+		float progress = (total > 0.0f) ? float(current / total) : 0.0f;
+		const std::string leftTime = formatTime(current);
+		const std::string rightTime = formatTime(total);
 		
 		const ImVec2 playButPosX = ImGui::GetItemRectMin();
 		const float fourth = ImGui::GetContentRegionAvail().x / 4;
@@ -166,12 +166,12 @@ int main() {
 		y = ImGui::GetCursorPosY();
 		ImGui::SetCursorPosY(y + 2.0f);
 		
-		const float barWidth = fourth + ImGui::GetContentRegionAvail().x / 2 - ImGui::CalcTextSize(rightTime.c_str()).x;
+		const float barWidth = fourth + ImGui::GetContentRegionAvail().x * 0.5f - ImGui::CalcTextSize(rightTime.c_str()).x;
 		ImGui::SetNextItemWidth(barWidth - (fourth * 0.5f) * 2.0f);
 
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, -1.0f));
 		if (ImGui::SliderFloat("##SongBar", &progress, 0.0f, 1.0f, "")) {
-			double newTime = progress * total;
+			const double newTime = progress * total;
 			player.seek(newTime);
 		}
 		ImGui::PopStyleVar(1);
@@ -179,10 +179,29 @@ int main() {
 
 		ImGui::SetCursorPosY(y);
 		ImGui::Text(rightTime.c_str());
+		ImGui::SameLine();
+
+		// Volume Bar
+		float x = ImGui::GetCursorPosX();
+		ImGui::SetCursorPosX(x + ImGui::GetContentRegionAvail().x - 200.0f);
+		ImGui::SetNextItemWidth(100.0f);
+		y = ImGui::GetCursorPosY();
+		ImGui::SetCursorPosY(y + 2.0f);
+		static float volume = 1.0f;
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, -1.0f));
+		if (ImGui::SliderFloat("##VolumeBar", &volume, 0.0f, 1.0f, "")) {
+			player.setVolume(volume);
+		}
+		ImGui::PopStyleVar(1);
+		ImGui::SameLine();
+
+		ImGui::Text("%.0f", volume * 100.0f);
 
 		ImGui::End();
 
+		// Song List
 		static int selectedIndex = -1;
+		static int popupIndex = -1;
 		ImGui::Begin("Songs");
 		ImGui::BeginChild("SongList", ImVec2(0, 0), true);
 		
@@ -193,6 +212,19 @@ int main() {
 				selectedIndex = i;
 				player.play(song.string());
 			}
+
+			if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
+				ImGui::OpenPopup("SongContextMenu");
+				popupIndex = i;
+			}
+		}
+
+		if (ImGui::BeginPopup("SongContextMenu")) {
+			if (ImGui::MenuItem("Delete")) {
+				manager.erase(manager.mSongs[popupIndex]);
+				ImGui::CloseCurrentPopup();
+			}
+			ImGui::EndPopup();
 		}
 
 		ImGui::EndChild();

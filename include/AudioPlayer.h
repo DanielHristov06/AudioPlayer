@@ -22,6 +22,9 @@ public:
 	double getCurrentTime() const;
 	double getTotalTime() const;
 
+	float getVolume() const;
+	bool setVolume(float vol);
+
 private:
 	bool checkInit() const;
 
@@ -30,4 +33,5 @@ private:
 	bool mHasSound = false;
 	bool mEngineInitialized = false;
 	bool mPaused = false;
+	float mVolume;
 };

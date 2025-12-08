@@ -9,7 +9,7 @@ LibraryManager::LibraryManager() : mMusicDir(fs::current_path() / "music") {
 		fs:create_directory(mMusicDir);
 	}
 	else if (!fs::is_directory(mMusicDir)) {
-		std::println("Path '{}' exists but is not a directory.", mMusicDir.string());
+		std::println("Path '{}' exists but is not a directory.\n", mMusicDir.string());
 	}
 
 	for (const auto& entry : fs::directory_iterator(mMusicDir)) {
@@ -26,7 +26,7 @@ bool LibraryManager::import() {
 	const char* fp = tinyfd_openFileDialog("Select an audio file", "", 3, mFilters, "Audio files", 1);
 	
 	if (!fp) {
-		std::println("Cannot load this file.");
+		std::println("Cannot load this file.\n");
 		return false;
 	}
 
@@ -56,10 +56,29 @@ bool LibraryManager::import() {
 			}
 		}
 		catch (const fs::filesystem_error& e) {
-			std::println("Failed to copy file:\n {}\n to {}\n because {}", path.string(), dst.string(), e.what());
+			std::println("Failed to copy file:\n {}\n to {}\n because {}\n", path.string(), dst.string(), e.what());
 			return false;
 		}
 	}
 
 	return true;
+}
+
+bool LibraryManager::erase(const fs::path& song) {
+	std::error_code ec;
+	fs::remove(song, ec);
+
+	if (ec) {
+		std::println("Failed to delete file {}\n: {}\n", song.string(), ec.message());
+		return false;
+	}
+
+	const auto& it = std::find(mSongs.begin(), mSongs.end(), song);
+
+	if (it != mSongs.end()) {
+		mSongs.erase(it);
+		return true;
+	}
+
+	return false;
 }
