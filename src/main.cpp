@@ -49,6 +49,7 @@ int main() {
 	const GLuint playIconHovered = loadTextureFromMemory(play2, play2Len);
 	const GLuint pauseIcon = loadTextureFromMemory(pause, pauseLen);
 	const GLuint pauseIconHovered = loadTextureFromMemory(pause2, pause2Len);
+	const GLuint volumeIcon = loadTextureFromMemory(volume, volumeLen);
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -121,7 +122,7 @@ int main() {
 
 		// Play Button
 		float size = ImGui::GetWindowSize().x * 0.04f;
-		size = std::clamp(size, 32.0f, 64.0f);
+		size = std::clamp(size, 32.0f, 48.0f);
 		ImGui::SetCursorPosX((ImGui::GetWindowSize().x - size) * 0.5f);
 		ImGui::SetCursorPosY((ImGui::GetWindowSize().y - size) * 0.5f - 20.0f);
 		const ImVec4 color(0, 0, 0, 0);
@@ -184,6 +185,8 @@ int main() {
 		// Volume Bar
 		float x = ImGui::GetCursorPosX();
 		ImGui::SetCursorPosX(x + ImGui::GetContentRegionAvail().x - 200.0f);
+		ImGui::Image(ImTextureRef((ImTextureID)volumeIcon), ImVec2(16.0f, 16.0f));
+		ImGui::SameLine();
 		ImGui::SetNextItemWidth(100.0f);
 		y = ImGui::GetCursorPosY();
 		ImGui::SetCursorPosY(y + 2.0f);

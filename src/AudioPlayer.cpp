@@ -1,7 +1,7 @@
 #include "AudioPlayer.h"
 #include <print>
 
-AudioPlayer::AudioPlayer() : mVolume(100.0f) {
+AudioPlayer::AudioPlayer() : mVolume(1.0f) {
 	if (ma_engine_init(NULL, &mEngine) != MA_SUCCESS) {
 		std::println("Failed to init audio engine.\n");
 		mEngineInitialized = false;
@@ -115,6 +115,7 @@ bool AudioPlayer::setVolume(float vol) {
 	if (!mHasSound || !checkInit()) return false;
 
 	ma_sound_set_volume(&mCurrentSound, vol);
+	mVolume = vol;
 	return true;
 }
 

@@ -11,3 +11,6 @@ extern const unsigned int pauseLen;
 
 extern const unsigned char pause2[];
 extern const unsigned int pause2Len;
+
+extern const unsigned char volume[];
+extern const unsigned int volumeLen;
