@@ -17,6 +17,8 @@ public:
 	bool pause();
 	bool resume();
 	bool isPaused() const;
+	bool isPlaying() const;
+	bool hasFinished() const;
 	bool seek(double seconds);
 
 	double getCurrentTime() const;

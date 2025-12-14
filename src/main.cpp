@@ -233,6 +233,13 @@ int main() {
 		ImGui::EndChild();
 		ImGui::End();
 
+		static bool wasPlaying = false;
+		bool playing = player.isPlaying();
+		if (wasPlaying && !playing && player.hasFinished()) {
+			playNextSong(manager, player, selectedIndex);
+		}
+		wasPlaying = playing;
+
 		ImGui::Render();
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);

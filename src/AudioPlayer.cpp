@@ -79,6 +79,20 @@ bool AudioPlayer::isPaused() const {
 	return mPaused;
 }
 
+bool AudioPlayer::isPlaying() const {
+	if (!checkInit()) return false;
+	return mHasSound && ma_sound_is_playing(&mCurrentSound);
+}
+
+bool AudioPlayer::hasFinished() const {
+	if (!mHasSound or !checkInit()) return false;
+
+	double current = getCurrentTime();
+	double total = getTotalTime();
+
+	return total > 0.0 && (total - current) < 0.05;
+}
+
 bool AudioPlayer::seek(double seconds) {
 	if (!mHasSound || !checkInit()) return false;
 

@@ -7,3 +7,10 @@ std::string formatTime(double& seconds) {
 	int sec = s % 60;
 	return std::format("{}:{:02}", min, sec);
 }
+
+void playNextSong(LibraryManager& manager, AudioPlayer& player, int& selectedIndex) {
+	if (manager.mSongs.empty()) return;
+
+	selectedIndex = (selectedIndex + 1) % manager.mSongs.size();
+	player.play(manager.mSongs[selectedIndex].string());
+}
