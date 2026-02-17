@@ -9,7 +9,6 @@
 #include "AudioPlayer.h"
 #include "TextureLoader.h"
 #include "Utils.h"
-#include "Textures.h"
 
 int main() {
 	LibraryManager manager;
@@ -45,11 +44,11 @@ int main() {
 		return -1;
 	}
 
-	const GLuint playIcon = loadTextureFromMemory(play, playLen);
-	const GLuint playIconHovered = loadTextureFromMemory(play2, play2Len);
-	const GLuint pauseIcon = loadTextureFromMemory(pause, pauseLen);
-	const GLuint pauseIconHovered = loadTextureFromMemory(pause2, pause2Len);
-	const GLuint volumeIcon = loadTextureFromMemory(volume, volumeLen);
+	const GLuint playIcon = loadTextureFromResource("textures/play.png");
+	const GLuint playIconHovered = loadTextureFromResource("textures/play2.png");
+	const GLuint pauseIcon = loadTextureFromResource("textures/pause.png");
+	const GLuint pauseIconHovered = loadTextureFromResource("textures/pause2.png");
+	const GLuint volumeIcon = loadTextureFromResource("textures/volume.png");
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();

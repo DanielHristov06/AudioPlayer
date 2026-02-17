@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.31)
 project(AudioPlayer C CXX)
 
 set(CMAKE_CXX_STANDARD 23)
@@ -26,7 +26,25 @@ set(GLFW_BUILD_LIBS OFF CACHE BOOL "" FORCE)
 
 add_subdirectory("${VENDORS_DIR}/glfw")
 
+include("vendors/CmakeRC.cmake")
+
+cmrc_add_resource_library(player_resources ALIAS textures NAMESPACE icons
+    "textures/play.png"
+    "textures/play2.png"
+    "textures/pause.png"
+    "textures/pause2.png"
+    "textures/volume.png"
+)
+
 add_executable(AudioPlayer "${AUDIOPLAYER_SOURCES}")
+
+target_compile_features(AudioPlayer PRIVATE cxx_std_23)
+
+if (MSVC)
+    target_compile_options(AudioPlayer PRIVATE /std:c++latest)
+else()
+    target_compile_options(AudioPlayer PRIVATE -std=c++23)
+endif()
 
 target_include_directories(AudioPlayer PRIVATE
     "${INCLUDE_DIR}"
@@ -52,7 +70,7 @@ target_sources(AudioPlayer PRIVATE
 target_compile_definitions(AudioPlayer PRIVATE TEXTURE_DIR=\"${CMAKE_SOURCE_DIR}/textures\")
 target_compile_definitions(AudioPlayer PRIVATE IMGUI_IMPL_OPENGL_LOADER_GLAD GLFW_INCLUDE_NONE)
 
-target_link_libraries(AudioPlayer PRIVATE miniaudio tinyfiledialogs stbimage)
+target_link_libraries(AudioPlayer PRIVATE miniaudio tinyfiledialogs stbimage player_resources)
 
 if (WIN32)
     target_link_libraries(AudioPlayer PRIVATE glfw opengl32)

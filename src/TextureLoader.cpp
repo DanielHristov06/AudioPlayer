@@ -55,3 +55,38 @@ GLuint loadTextureFromMemory(const unsigned char* data, unsigned int length) {
 
 	return textureID;
 }
+
+GLuint loadTextureFromResource(const std::string& internalPath) {
+	auto fs = cmrc::icons::get_filesystem();
+
+	if (!fs.exists(internalPath)) {
+		std::println("Resource {} not found!", internalPath);
+		return 0;
+	}
+	auto file = fs.open(internalPath);
+
+	int width, height, channels;
+	stbi_uc* pixels = stbi_load_from_memory(reinterpret_cast<const unsigned char*>(file.begin()), file.size(), &width, &height, &channels, 4);
+
+	if (!pixels) {
+		std::println("Failed to decode resource: {} because {}", internalPath, stbi_failure_reason());
+		return 0;
+	}
+
+	GLuint textureID;
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_2D, textureID);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	stbi_image_free(pixels);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	return textureID;
+}

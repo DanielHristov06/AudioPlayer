@@ -36,6 +36,7 @@ bool AudioPlayer::play(const std::string& path) {
 	mHasSound = true;
 	mPaused = false;
 	ma_sound_start(&mCurrentSound);
+	ma_sound_set_volume(&mCurrentSound, mVolume);
 	return true;
 }
 
