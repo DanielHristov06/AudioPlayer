@@ -120,10 +120,10 @@ int main() {
 		ImGui::Begin("Player");
 
 		// Play Button
-		float size = ImGui::GetWindowSize().x * 0.04f;
-		size = std::clamp(size, 32.0f, 48.0f);
-		ImGui::SetCursorPosX((ImGui::GetWindowSize().x - size) * 0.5f);
-		ImGui::SetCursorPosY((ImGui::GetWindowSize().y - size) * 0.5f - 20.0f);
+		const float size = std::clamp(ImGui::GetWindowSize().x * 0.04f, 32.0f, 48.0f);
+		const float availX = ImGui::GetContentRegionAvail().x;
+		const float offX = (availX - size) * 0.5f;
+		if (offX > 0) ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offX);
 		const ImVec4 color(0, 0, 0, 0);
 		ImGui::PushStyleColor(ImGuiCol_Button, color);
 		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, color);
@@ -141,8 +141,7 @@ int main() {
 			tex = hovered ? playIconHovered : playIcon;
 		}
 		if (ImGui::ImageButton("PlayButton", ImTextureRef((ImTextureID)tex), ImVec2(size, size))) {
-			if (paused) player.resume();
-			else player.pause();
+			paused ? player.resume() : player.pause();
 		}
 		ImGui::PopStyleColor(3);
 

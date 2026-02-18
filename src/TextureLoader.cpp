@@ -57,13 +57,13 @@ GLuint loadTextureFromMemory(const unsigned char* data, unsigned int length) {
 }
 
 GLuint loadTextureFromResource(const std::string& internalPath) {
-	auto fs = cmrc::icons::get_filesystem();
+	const auto fs = cmrc::icons::get_filesystem();
 
 	if (!fs.exists(internalPath)) {
 		std::println("Resource {} not found!", internalPath);
 		return 0;
 	}
-	auto file = fs.open(internalPath);
+	const auto file = fs.open(internalPath);
 
 	int width, height, channels;
 	stbi_uc* pixels = stbi_load_from_memory(reinterpret_cast<const unsigned char*>(file.begin()), file.size(), &width, &height, &channels, 4);
