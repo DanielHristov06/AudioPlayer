@@ -119,6 +119,12 @@ int main() {
 		}
 
 		ImGui::Begin("Player");
+		const float curPos = ImGui::GetCursorPosX();
+
+		// Song Name
+		ImGui::Text(manager.mSongs[manager.selectedIndex].stem().string().c_str());
+		ImGui::SameLine();
+		ImGui::SetCursorPosX(curPos);
 
 		// Play Button
 		const float size = std::clamp(ImGui::GetWindowSize().x * 0.04f, 32.0f, 48.0f);
