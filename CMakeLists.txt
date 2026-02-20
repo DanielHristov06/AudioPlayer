@@ -34,6 +34,7 @@ cmrc_add_resource_library(player_resources ALIAS textures NAMESPACE icons
     "textures/pause.png"
     "textures/pause2.png"
     "textures/volume.png"
+    "textures/next.png"
 )
 
 add_executable(AudioPlayer "${AUDIOPLAYER_SOURCES}")

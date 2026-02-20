@@ -4,7 +4,7 @@
 #include <string>
 #include <ranges>
 
-LibraryManager::LibraryManager() : mMusicDir(fs::current_path() / "music") {
+LibraryManager::LibraryManager() : mMusicDir(fs::current_path() / "music"), selectedIndex(-1) {
 	if (!fs::exists(mMusicDir)) {
 		fs:create_directory(mMusicDir);
 	}

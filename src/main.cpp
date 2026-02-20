@@ -49,6 +49,7 @@ int main() {
 	const GLuint pauseIcon = loadTextureFromResource("textures/pause.png");
 	const GLuint pauseIconHovered = loadTextureFromResource("textures/pause2.png");
 	const GLuint volumeIcon = loadTextureFromResource("textures/volume.png");
+	const GLuint nextIcon = loadTextureFromResource("textures/next.png");
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -140,8 +141,31 @@ int main() {
 		else {
 			tex = hovered ? playIconHovered : playIcon;
 		}
+		const ImVec2 playButPos = ImGui::GetCursorPos();
 		if (ImGui::ImageButton("PlayButton", ImTextureRef((ImTextureID)tex), ImVec2(size, size))) {
 			paused ? player.resume() : player.pause();
+		}
+		ImGui::PopStyleColor(3);
+		ImGui::SameLine();
+
+
+		// Next Button
+		ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 7.0f);
+		ImGui::PushStyleColor(ImGuiCol_Button, color);
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, color);
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, color);
+		if (ImGui::ImageButton("NextButton", ImTextureRef((ImTextureID)nextIcon), ImVec2(64.0f, 64.0f))) {
+			utils::playNextSong(manager, player);
+		}
+		ImGui::PopStyleColor(3);
+
+		// Prev Button
+		ImGui::SetCursorPos(ImVec2(playButPos.x - size - (64.0f * 0.5f), playButPos.y - 7.0f));
+		ImGui::PushStyleColor(ImGuiCol_Button, color);
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, color);
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, color);
+		if (ImGui::ImageButton("PrevButton", ImTextureRef((ImTextureID)nextIcon), ImVec2(64.0f, 64.0f), ImVec2(1, 0), ImVec2(0, 1))) {
+			utils::playPrevSong(manager, player);
 		}
 		ImGui::PopStyleColor(3);
 
@@ -149,34 +173,30 @@ int main() {
 		double current = player.getCurrentTime();
 		double total = player.getTotalTime();
 		float progress = (total > 0.0f) ? float(current / total) : 0.0f;
-		const std::string leftTime = formatTime(current);
-		const std::string rightTime = formatTime(total);
-		
-		const ImVec2 playButPosX = ImGui::GetItemRectMin();
-		const float fourth = ImGui::GetContentRegionAvail().x / 4;
-		const float cursorX = playButPosX.x - ImGui::CalcTextSize(leftTime.c_str()).x - fourth;
-		ImGui::SetCursorPosX(cursorX + fourth * 0.5f);
-		float y = ImGui::GetCursorPosY();
-		ImGui::SetCursorPosY(y + 10.0f);
+		const std::string leftTime = utils::formatTime(current);
+		const std::string rightTime = utils::formatTime(total);
+
+		const float textWidth = ImGui::CalcTextSize("0:00").x;
+		const float spacing = ImGui::GetStyle().ItemSpacing.x;
+		const float barWidth = ImGui::GetContentRegionAvail().x * 0.3f;
+		const float totalRowWidth = textWidth + spacing + barWidth + spacing + textWidth;
+
+		const float offset = (ImGui::GetContentRegionAvail().x - totalRowWidth) * 0.5f;
+		if (offset > 0.0f) ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offset);
 
 		ImGui::Text(leftTime.c_str());
 		ImGui::SameLine();
 
-		y = ImGui::GetCursorPosY();
-		ImGui::SetCursorPosY(y + 2.0f);
-		
-		const float barWidth = fourth + ImGui::GetContentRegionAvail().x * 0.5f - ImGui::CalcTextSize(rightTime.c_str()).x;
-		ImGui::SetNextItemWidth(barWidth - (fourth * 0.5f) * 2.0f);
-
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, -1.0f));
+		ImGui::PushItemWidth(barWidth);
 		if (ImGui::SliderFloat("##SongBar", &progress, 0.0f, 1.0f, "")) {
 			const double newTime = progress * total;
 			player.seek(newTime);
 		}
-		ImGui::PopStyleVar(1);
+		ImGui::PopStyleVar();
+		ImGui::PopItemWidth();
 		ImGui::SameLine();
 
-		ImGui::SetCursorPosY(y);
 		ImGui::Text(rightTime.c_str());
 		ImGui::SameLine();
 
@@ -186,7 +206,7 @@ int main() {
 		ImGui::Image(ImTextureRef((ImTextureID)volumeIcon), ImVec2(16.0f, 16.0f));
 		ImGui::SameLine();
 		ImGui::SetNextItemWidth(100.0f);
-		y = ImGui::GetCursorPosY();
+		float y = ImGui::GetCursorPosY();
 		ImGui::SetCursorPosY(y + 2.0f);
 		static float volume = 1.0f;
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, -1.0f));
@@ -201,7 +221,6 @@ int main() {
 		ImGui::End();
 
 		// Song List
-		static int selectedIndex = -1;
 		static int popupIndex = -1;
 		ImGui::Begin("Songs");
 		ImGui::BeginChild("SongList", ImVec2(0, 0), true);
@@ -209,8 +228,8 @@ int main() {
 		for (int i = 0; i < manager.mSongs.size(); i++) {
 			const auto& song = manager.mSongs[i];
 
-			if (ImGui::Selectable(song.stem().string().c_str(), selectedIndex == i)) {
-				selectedIndex = i;
+			if (ImGui::Selectable(song.stem().string().c_str(), manager.selectedIndex == i)) {
+				manager.selectedIndex = i;
 				player.play(song.string());
 			}
 
@@ -234,7 +253,7 @@ int main() {
 		static bool wasPlaying = false;
 		bool playing = player.isPlaying();
 		if (wasPlaying && !playing && player.hasFinished()) {
-			playNextSong(manager, player, selectedIndex);
+			utils::playNextSong(manager, player);
 		}
 		wasPlaying = playing;
 

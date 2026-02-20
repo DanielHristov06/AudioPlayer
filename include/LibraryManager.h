@@ -9,6 +9,7 @@ public:
 	LibraryManager();
 
 	std::vector<fs::path> mSongs;
+	int selectedIndex;
 	bool import();
 	bool erase(const fs::path& song);
 
