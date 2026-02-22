@@ -60,8 +60,20 @@ int main() {
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 460");
 
+	double lastTime = glfwGetTime();
+
 	while (!glfwWindowShouldClose(window)) {
-		glfwPollEvents();
+		const double currentTime = glfwGetTime();
+		const double targetTime = 1.0 / 60.0;
+
+		if (player.isPlaying() && (currentTime - lastTime < targetTime)) {
+			const double remaining = targetTime - (currentTime - lastTime);
+			glfwWaitEventsTimeout(remaining);
+		}
+		else {
+			glfwWaitEvents();
+		}
+		lastTime = glfwGetTime();
 
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
