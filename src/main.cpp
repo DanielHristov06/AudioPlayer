@@ -122,9 +122,11 @@ int main() {
 		const float curPos = ImGui::GetCursorPosX();
 
 		// Song Name
-		ImGui::Text(manager.mSongs[manager.selectedIndex].stem().string().c_str());
-		ImGui::SameLine();
-		ImGui::SetCursorPosX(curPos);
+		if (manager.selectedIndex >= 0) {
+			ImGui::Text(manager.mSongs[manager.selectedIndex].stem().string().c_str());
+			ImGui::SameLine();
+			ImGui::SetCursorPosX(curPos);
+		}
 
 		// Play Button
 		const float size = std::clamp(ImGui::GetWindowSize().x * 0.04f, 32.0f, 48.0f);
@@ -151,25 +153,16 @@ int main() {
 		if (ImGui::ImageButton("PlayButton", ImTextureRef((ImTextureID)tex), ImVec2(size, size))) {
 			paused ? player.resume() : player.pause();
 		}
-		ImGui::PopStyleColor(3);
 		ImGui::SameLine();
-
 
 		// Next Button
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 7.0f);
-		ImGui::PushStyleColor(ImGuiCol_Button, color);
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, color);
-		ImGui::PushStyleColor(ImGuiCol_ButtonActive, color);
 		if (ImGui::ImageButton("NextButton", ImTextureRef((ImTextureID)nextIcon), ImVec2(64.0f, 64.0f))) {
 			utils::playNextSong(manager, player);
 		}
-		ImGui::PopStyleColor(3);
 
 		// Prev Button
 		ImGui::SetCursorPos(ImVec2(playButPos.x - size - (64.0f * 0.5f), playButPos.y - 7.0f));
-		ImGui::PushStyleColor(ImGuiCol_Button, color);
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, color);
-		ImGui::PushStyleColor(ImGuiCol_ButtonActive, color);
 		if (ImGui::ImageButton("PrevButton", ImTextureRef((ImTextureID)nextIcon), ImVec2(64.0f, 64.0f), ImVec2(1, 0), ImVec2(0, 1))) {
 			utils::playPrevSong(manager, player);
 		}

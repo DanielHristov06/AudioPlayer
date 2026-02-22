@@ -86,7 +86,7 @@ bool AudioPlayer::isPlaying() const {
 }
 
 bool AudioPlayer::hasFinished() const {
-	if (!mHasSound or !checkInit()) return false;
+	if (!mHasSound || !checkInit()) return false;
 
 	double current = getCurrentTime();
 	double total = getTotalTime();

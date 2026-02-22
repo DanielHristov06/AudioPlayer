@@ -12,14 +12,27 @@ namespace utils {
 	void playNextSong(LibraryManager& manager, AudioPlayer& player) {
 		if (manager.mSongs.empty()) return;
 
-		manager.selectedIndex = (manager.selectedIndex + 1) % manager.mSongs.size();
+		if (manager.selectedIndex < 0) {
+			manager.selectedIndex = 0;
+		}
+		else {
+			manager.selectedIndex = (manager.selectedIndex + 1) % manager.mSongs.size();
+		}
+		
 		player.play(manager.mSongs[manager.selectedIndex].string());
 	}
 
 	void playPrevSong(LibraryManager& manager, AudioPlayer& player){
 		if (manager.mSongs.empty()) return;
 
-		manager.selectedIndex = (manager.selectedIndex - 1) % manager.mSongs.size();
+		if (manager.selectedIndex < 0) {
+			manager.selectedIndex = static_cast<int>(manager.mSongs.size() - 1);
+		}
+		else {
+			const int size = static_cast<int>(manager.mSongs.size());
+			manager.selectedIndex = (manager.selectedIndex - 1 + size) % size;
+		}
+
 		player.play(manager.mSongs[manager.selectedIndex].string());
 	}
 }
