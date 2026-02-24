@@ -16,4 +16,5 @@ public:
 private:
 	const char* mFilters[3] = { "*.mp3", "*.wav", "*.ogg" };
 	fs::path mMusicDir{};
+	fs::path get_base_path();
 };

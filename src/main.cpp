@@ -212,12 +212,12 @@ int main() {
 		ImGui::SameLine();
 
 		// Volume Bar
-		float x = ImGui::GetCursorPosX();
+		const float x = ImGui::GetCursorPosX();
 		ImGui::SetCursorPosX(x + ImGui::GetContentRegionAvail().x - 200.0f);
 		ImGui::Image(ImTextureRef((ImTextureID)volumeIcon), ImVec2(16.0f, 16.0f));
 		ImGui::SameLine();
 		ImGui::SetNextItemWidth(100.0f);
-		float y = ImGui::GetCursorPosY();
+		const float y = ImGui::GetCursorPosY();
 		ImGui::SetCursorPosY(y + 2.0f);
 		static float volume = 1.0f;
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, -1.0f));

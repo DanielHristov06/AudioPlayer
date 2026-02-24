@@ -4,9 +4,9 @@
 #include <string>
 #include <ranges>
 
-LibraryManager::LibraryManager() : mMusicDir(fs::current_path() / "music"), selectedIndex(-1) {
+LibraryManager::LibraryManager() : mMusicDir(get_base_path() / "AudioPlayer" / "Music"), selectedIndex(-1) {
 	if (!fs::exists(mMusicDir)) {
-		fs:create_directory(mMusicDir);
+		fs:create_directories(mMusicDir);
 	}
 	else if (!fs::is_directory(mMusicDir)) {
 		std::println("Path '{}' exists but is not a directory.\n", mMusicDir.string());
@@ -81,4 +81,20 @@ bool LibraryManager::erase(const fs::path& song) {
 	}
 
 	return false;
+}
+
+fs::path LibraryManager::get_base_path() {
+#if defined(_WIN32)
+	const char* appData = std::getenv("APPDATA");
+	return appData ? fs::path(appData) : fs::current_path();
+#elif defined(__APPLE__)
+	const char* home = std::getenv("HOME");
+	return home ? fs::path(home) / "Library" / "Application Support" : fs::current_path();
+#else
+	const char* xdgData = std::getenv("XDG_DATA_HOME");
+	if (xdgData) return fs::path(xdgData);
+
+	const char* home = std::getenv("HOME");
+	return home ? fs::path(home) / ".local" / "share" : fs::current_path();
+#endif
 }
