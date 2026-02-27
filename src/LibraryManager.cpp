@@ -4,7 +4,7 @@
 #include <string>
 #include <ranges>
 
-LibraryManager::LibraryManager() : mMusicDir(get_base_path() / "AudioPlayer" / "Music"), selectedIndex(-1) {
+LibraryManager::LibraryManager() : mMusicDir(getBasePath() / "AudioPlayer" / "Music"), selectedIndex(-1) {
 	if (!fs::exists(mMusicDir)) {
 		fs:create_directories(mMusicDir);
 	}
@@ -83,7 +83,7 @@ bool LibraryManager::erase(const fs::path& song) {
 	return false;
 }
 
-fs::path LibraryManager::get_base_path() {
+fs::path LibraryManager::getBasePath() {
 #if defined(_WIN32)
 	const char* appData = std::getenv("APPDATA");
 	return appData ? fs::path(appData) : fs::current_path();

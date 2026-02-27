@@ -51,6 +51,8 @@ int main() {
 	const GLuint volumeIcon = loadTextureFromResource("textures/volume.png");
 	const GLuint nextIcon = loadTextureFromResource("textures/next.png");
 
+	bool playlistWindow = false;
+
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 
@@ -99,6 +101,10 @@ int main() {
 			if (ImGui::BeginMenuBar()) {
 				if (ImGui::MenuItem("Import")) {
 					manager.import();
+				}
+
+				if (ImGui::MenuItem("New Playlist")) {
+					playlistWindow = !playlistWindow;
 				}
 			}
 			ImGui::EndMenuBar();
@@ -260,6 +266,24 @@ int main() {
 
 		ImGui::EndChild();
 		ImGui::End();
+
+		if (playlistWindow) {
+			ImGui::Begin("New Playlist", &playlistWindow, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
+
+			char playlistName[128] = "";
+			ImGui::InputText("Playlist Name", playlistName, IM_ARRAYSIZE(playlistName));
+
+			if (ImGui::Button("Cancel")) {
+				playlistWindow = false;
+			}
+			ImGui::SameLine();
+
+			if (ImGui::Button("Create")) {
+				
+			}
+
+			ImGui::End();
+		}
 
 		static bool wasPlaying = false;
 		bool playing = player.isPlaying();
