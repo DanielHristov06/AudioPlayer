@@ -52,6 +52,7 @@ int main() {
 	const GLuint nextIcon = loadTextureFromResource("textures/next.png");
 
 	bool playlistWindow = false;
+	char playlistName[128] = "";
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -105,6 +106,7 @@ int main() {
 
 				if (ImGui::MenuItem("New Playlist")) {
 					playlistWindow = !playlistWindow;
+					if (playlistWindow) playlistName[0] = '\0';
 				}
 			}
 			ImGui::EndMenuBar();
@@ -267,14 +269,37 @@ int main() {
 		ImGui::EndChild();
 		ImGui::End();
 
+		// New Playlist Window
 		if (playlistWindow) {
-			ImGui::Begin("New Playlist", &playlistWindow, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
+			ImGui::SetNextWindowSize(ImVec2(350, 180));
 
-			char playlistName[128] = "";
-			ImGui::InputText("Playlist Name", playlistName, IM_ARRAYSIZE(playlistName));
+			ImGui::Begin("New Playlist", &playlistWindow, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+			const float windowWidth = ImGui::GetWindowSize().x;
+			const ImVec2 widgetSpacing = ImVec2(0.0f, 8.0f);
 
+			const char* labelText = "Playlist Name";
+			const float labelWidth = ImGui::CalcTextSize(labelText).x;
+			ImGui::SetCursorPosX((windowWidth - labelWidth) * 0.5f);
+			ImGui::Text(labelText);
+			ImGui::Dummy(widgetSpacing);
+
+			const float inputWidth = windowWidth * 0.8f;
+			ImGui::SetCursorPosX((windowWidth - inputWidth) * 0.5f);
+			ImGui::PushItemWidth(inputWidth);
+			ImGui::InputText("##NameInput", playlistName, IM_ARRAYSIZE(playlistName));
+			ImGui::PopItemWidth();
+
+			ImGui::Dummy(widgetSpacing);
+			ImGui::Separator();
+			ImGui::Dummy(widgetSpacing);
+
+			const float buttonWidth = 50.0f;
+			const float spacing = ImGui::GetStyle().ItemSpacing.x;
+			const float totalButtonWidth = (buttonWidth * 2) + spacing;
+			ImGui::SetCursorPosX((windowWidth - totalButtonWidth) * 0.5f);
 			if (ImGui::Button("Cancel")) {
 				playlistWindow = false;
+				playlistName[0] = '\0';
 			}
 			ImGui::SameLine();
 
