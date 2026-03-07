@@ -3,14 +3,12 @@
 #include <print>
 #include <string>
 #include <ranges>
+#include <fstream>
 
-LibraryManager::LibraryManager() : mMusicDir(getBasePath() / "AudioPlayer" / "Music"), selectedIndex(-1) {
-	if (!fs::exists(mMusicDir)) {
-		fs:create_directories(mMusicDir);
-	}
-	else if (!fs::is_directory(mMusicDir)) {
-		std::println("Path '{}' exists but is not a directory.\n", mMusicDir.string());
-	}
+LibraryManager::LibraryManager() : mMainDir(getBasePath() / "AudioPlayer"), mMusicDir(mMainDir / "Music"), mPlaylistDir(mMainDir / "Playlists"), selectedIndex(-1) {
+	createDirectory(mMainDir);
+	createDirectory(mMusicDir);
+	createDirectory(mPlaylistDir);
 
 	for (const auto& entry : fs::directory_iterator(mMusicDir)) {
 		const fs::path p(entry);
@@ -19,6 +17,27 @@ LibraryManager::LibraryManager() : mMusicDir(getBasePath() / "AudioPlayer" / "Mu
 		if (ext == ".mp3" || ext == ".wav" || ext == ".ogg") {
 			mSongs.push_back(p);
 		}
+	}
+
+	for (const auto& entry : fs::directory_iterator(mPlaylistDir)) {
+		std::ifstream file(entry.path());
+		if (!file.is_open()) continue;
+		std::string line;
+
+		std::getline(file, line);
+		const std::string name = line.substr(6);
+
+		Playlist currentPlaylist(name);
+
+		while (std::getline(file, line)) {
+			const fs::path path(line);
+
+			if (fs::exists(path)) {
+				currentPlaylist.songs.push_back(path);
+			}
+		}
+
+		mPlaylists.push_back(currentPlaylist);
 	}
 }
 
@@ -83,6 +102,37 @@ bool LibraryManager::erase(const fs::path& song) {
 	return false;
 }
 
+bool LibraryManager::createPlaylist(const std::string& playlist) {
+	const fs::path filepath = mPlaylistDir / (playlist + ".plst");
+
+	std::ofstream file(filepath);
+
+	if (!file.is_open()) {
+		std::println("Failed to open a playlist file: {}", filepath.string());
+		return false;
+	}
+
+	file << "Name: " << playlist << '\n';
+
+	mPlaylists.emplace_back(playlist, filepath, std::vector<fs::path>{});
+
+	file.close();
+
+	return true;
+}
+
+void LibraryManager::addSongToPlaylist(const Playlist& playlist, const fs::path& songPath) {
+	const fs::path filepath = mPlaylistDir / (playlist.name + ".plst");
+	std::ofstream file(filepath, std::ios::app);
+
+	if (file.is_open()) {
+		file << songPath.string() << '\n';
+	}
+	else {
+		std::println("Failed to open playlist for appending: {}", filepath.string());
+	}
+}
+
 fs::path LibraryManager::getBasePath() {
 #if defined(_WIN32)
 	const char* appData = std::getenv("APPDATA");
@@ -97,4 +147,13 @@ fs::path LibraryManager::getBasePath() {
 	const char* home = std::getenv("HOME");
 	return home ? fs::path(home) / ".local" / "share" : fs::current_path();
 #endif
+}
+
+void LibraryManager::createDirectory(const fs::path& dir) {
+	if (!fs::exists(dir)) {
+		fs::create_directory(dir);
+	}
+	else if (!fs::is_directory(dir)) {
+		std::println("Path '{}' exists but is not a directory.\n", dir.string());
+	}
 }

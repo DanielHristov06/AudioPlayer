@@ -263,6 +263,16 @@ int main() {
 				manager.erase(manager.mSongs[popupIndex]);
 				ImGui::CloseCurrentPopup();
 			}
+			
+			if (ImGui::BeginMenu("Add to playlist")) {
+				for (const auto& playlist : manager.mPlaylists) {
+					if (ImGui::MenuItem(playlist.name.c_str())) {
+						manager.addSongToPlaylist(playlist, manager.mSongs[popupIndex]);
+					}
+				}
+
+				ImGui::EndMenu();
+			}
 			ImGui::EndPopup();
 		}
 
@@ -304,7 +314,9 @@ int main() {
 			ImGui::SameLine();
 
 			if (ImGui::Button("Create")) {
-				
+				const std::string plName(playlistName);
+				manager.createPlaylist(plName);
+				playlistName[0] = '\0';
 			}
 
 			ImGui::End();
