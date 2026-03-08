@@ -8,6 +8,7 @@ struct Playlist {
 	std::string name;
 	fs::path filePath;
 	std::vector<fs::path> songs;
+	int selectedIndex = -1;
 };
 
 class LibraryManager {
@@ -16,12 +17,15 @@ public:
 
 	std::vector<fs::path> mSongs;
 	std::vector<Playlist> mPlaylists;
+	int selectedPlaylist;
 	int selectedIndex;
+	bool isPlayingFomPlaylist;
 	bool import();
 	bool erase(const fs::path& song);
 
 	bool createPlaylist(const std::string& playlist);
-	void addSongToPlaylist(const Playlist& playlist, const fs::path& songPath);
+	void addSongToPlaylist(Playlist& playlist, const fs::path& songPath);
+	bool isSongInPlaylist(const fs::path& targetPath);
 
 private:
 	const char* mFilters[3] = { "*.mp3", "*.wav", "*.ogg" };

@@ -104,6 +104,8 @@ int main() {
 					manager.import();
 				}
 
+				ImGui::Separator();
+
 				if (ImGui::MenuItem("New Playlist")) {
 					playlistWindow = !playlistWindow;
 					if (playlistWindow) playlistName[0] = '\0';
@@ -142,8 +144,14 @@ int main() {
 		const float curPos = ImGui::GetCursorPosX();
 
 		// Song Name
-		if (manager.selectedIndex >= 0) {
-			ImGui::Text(manager.mSongs[manager.selectedIndex].stem().string().c_str());
+		if (manager.selectedIndex >= 0 || manager.selectedPlaylist >= 0) {
+			if (!manager.isPlayingFomPlaylist) {
+				ImGui::Text(manager.mSongs[manager.selectedIndex].stem().string().c_str());
+			}
+			else {
+				Playlist selectedPlaylist = manager.mPlaylists[manager.selectedPlaylist];
+				ImGui::Text(selectedPlaylist.songs[selectedPlaylist.selectedIndex].stem().string().c_str());
+			}
 			ImGui::SameLine();
 			ImGui::SetCursorPosX(curPos);
 		}
@@ -247,14 +255,41 @@ int main() {
 		for (int i = 0; i < manager.mSongs.size(); i++) {
 			const auto& song = manager.mSongs[i];
 
-			if (ImGui::Selectable(song.stem().string().c_str(), manager.selectedIndex == i)) {
-				manager.selectedIndex = i;
-				player.play(song.string());
-			}
+			if (!manager.isSongInPlaylist(song)) {
+				if (ImGui::Selectable(song.stem().string().c_str(), manager.selectedIndex == i)) {
+					manager.selectedIndex = i;
+					manager.isPlayingFomPlaylist = false;
+					if (manager.selectedPlaylist != -1) {
+						manager.mPlaylists[manager.selectedPlaylist].selectedIndex = -1;
+						manager.selectedPlaylist = -1;
+					}
+					player.play(song.string());
+				}
 
-			if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
-				ImGui::OpenPopup("SongContextMenu");
-				popupIndex = i;
+				if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
+					ImGui::OpenPopup("SongContextMenu");
+					popupIndex = i;
+				}
+			}
+		}
+
+		ImGui::Spacing();
+		ImGui::Separator();
+		ImGui::Spacing();
+
+		for (const auto& playlist : manager.mPlaylists) {
+			if (ImGui::CollapsingHeader(playlist.name.c_str())) {
+				for (int i = 0; i < playlist.songs.size(); i++) {
+					const auto& song = playlist.songs[i];
+
+					if (ImGui::Selectable(song.stem().string().c_str(), playlist.selectedIndex == i)) {
+						manager.selectedIndex = -1;
+						manager.isPlayingFomPlaylist = true;
+						manager.selectedPlaylist = i;
+						manager.mPlaylists[i].selectedIndex = i;
+						player.play(song.string());
+					}
+				}
 			}
 		}
 
@@ -263,11 +298,15 @@ int main() {
 				manager.erase(manager.mSongs[popupIndex]);
 				ImGui::CloseCurrentPopup();
 			}
+
+			ImGui::Separator();
 			
 			if (ImGui::BeginMenu("Add to playlist")) {
-				for (const auto& playlist : manager.mPlaylists) {
+				for (auto& playlist : manager.mPlaylists) {
 					if (ImGui::MenuItem(playlist.name.c_str())) {
-						manager.addSongToPlaylist(playlist, manager.mSongs[popupIndex]);
+						if (!manager.isSongInPlaylist(manager.mSongs[popupIndex])) {
+							manager.addSongToPlaylist(playlist, manager.mSongs[popupIndex]);
+						}
 					}
 				}
 

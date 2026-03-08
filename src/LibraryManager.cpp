@@ -5,7 +5,8 @@
 #include <ranges>
 #include <fstream>
 
-LibraryManager::LibraryManager() : mMainDir(getBasePath() / "AudioPlayer"), mMusicDir(mMainDir / "Music"), mPlaylistDir(mMainDir / "Playlists"), selectedIndex(-1) {
+LibraryManager::LibraryManager() : mMainDir(getBasePath() / "AudioPlayer"), mMusicDir(mMainDir / "Music"), mPlaylistDir(mMainDir / "Playlists"),
+selectedPlaylist(-1), selectedIndex(-1), isPlayingFomPlaylist(false) {
 	createDirectory(mMainDir);
 	createDirectory(mMusicDir);
 	createDirectory(mPlaylistDir);
@@ -121,16 +122,28 @@ bool LibraryManager::createPlaylist(const std::string& playlist) {
 	return true;
 }
 
-void LibraryManager::addSongToPlaylist(const Playlist& playlist, const fs::path& songPath) {
+void LibraryManager::addSongToPlaylist(Playlist& playlist, const fs::path& songPath) {
 	const fs::path filepath = mPlaylistDir / (playlist.name + ".plst");
 	std::ofstream file(filepath, std::ios::app);
 
 	if (file.is_open()) {
 		file << songPath.string() << '\n';
+		playlist.songs.push_back(songPath);
 	}
 	else {
 		std::println("Failed to open playlist for appending: {}", filepath.string());
 	}
+
+	file.close();
+}
+
+bool LibraryManager::isSongInPlaylist(const fs::path& targetPath) {
+	for (const Playlist& playlist : mPlaylists) {
+		for (const fs::path& path : playlist.songs) {
+			if (path == targetPath) return true;
+		}
+	}
+	return false;
 }
 
 fs::path LibraryManager::getBasePath() {
