@@ -312,6 +312,11 @@ int main() {
 					}
 				}
 			}
+
+			if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
+				ImGui::OpenPopup("PlaylistContextMenu");
+				popupPlaylistIndex = p;
+			}
 		}
 
 		if (ImGui::BeginPopup("SongContextMenu")) {
@@ -349,6 +354,15 @@ int main() {
 
 				ImGui::EndMenu();
 			}
+			ImGui::EndPopup();
+		}
+
+		if (ImGui::BeginPopup("PlaylistContextMenu")) {
+			if (ImGui::MenuItem("Delete playlist")) {
+				manager.removePlaylist(manager.mPlaylists[popupPlaylistIndex]);
+				ImGui::CloseCurrentPopup();
+			}
+
 			ImGui::EndPopup();
 		}
 

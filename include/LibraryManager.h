@@ -1,6 +1,7 @@
 #pragma once
 #include <filesystem>
 #include <vector>
+#include <string>
 
 namespace fs = std::filesystem;
 
@@ -9,6 +10,8 @@ struct Playlist {
 	fs::path filePath;
 	std::vector<fs::path> songs;
 	int selectedIndex = -1;
+
+	bool operator==(const Playlist& other) { return filePath == other.filePath; }
 };
 
 class LibraryManager {
@@ -24,6 +27,7 @@ public:
 	bool erase(const fs::path& song);
 
 	bool createPlaylist(const std::string& playlist);
+	bool removePlaylist(Playlist& playlist);
 	void addSongToPlaylist(Playlist& playlist, const fs::path& songPath) const;
 	bool removeSongFromPlaylist(Playlist& playlist, int songIndex) const;
 	bool isSongInPlaylist(const fs::path& targetPath, const Playlist& playlist);

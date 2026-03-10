@@ -1,9 +1,9 @@
 #include "LibraryManager.h"
 #include "tinyfiledialogs.h"
 #include <print>
-#include <string>
 #include <ranges>
 #include <fstream>
+#include <system_error>
 
 LibraryManager::LibraryManager() : mMainDir(getBasePath() / "AudioPlayer"), mMusicDir(mMainDir / "Music"), mPlaylistDir(mMainDir / "Playlists"),
 selectedPlaylist(-1), selectedIndex(-1), isPlayingFomPlaylist(false) {
@@ -28,7 +28,7 @@ selectedPlaylist(-1), selectedIndex(-1), isPlayingFomPlaylist(false) {
 		std::getline(file, line);
 		const std::string name = line.substr(6);
 
-		Playlist currentPlaylist(name);
+		Playlist currentPlaylist(name, entry.path());
 
 		while (std::getline(file, line)) {
 			const fs::path path(line);
@@ -120,6 +120,26 @@ bool LibraryManager::createPlaylist(const std::string& playlist) {
 	file.close();
 
 	return true;
+}
+
+bool LibraryManager::removePlaylist(Playlist& playlist) {
+	const fs::path filepath = playlist.filePath;
+	std::error_code ec;
+	fs::remove(filepath, ec);
+
+	if (ec) {
+		std::println("Failed to delete playlist {}\n: {}\n", filepath.string(), ec.message());
+		return false;
+	}
+
+	const auto& it = std::find(mPlaylists.begin(), mPlaylists.end(), playlist);
+
+	if (it != mPlaylists.end()) {
+		mPlaylists.erase(it);
+		return true;
+	}
+
+	return false;
 }
 
 void LibraryManager::addSongToPlaylist(Playlist& playlist, const fs::path& songPath) const {
