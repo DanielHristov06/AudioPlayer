@@ -122,7 +122,7 @@ bool LibraryManager::createPlaylist(const std::string& playlist) {
 	return true;
 }
 
-void LibraryManager::addSongToPlaylist(Playlist& playlist, const fs::path& songPath) {
+void LibraryManager::addSongToPlaylist(Playlist& playlist, const fs::path& songPath) const {
 	const fs::path filepath = mPlaylistDir / (playlist.name + ".plst");
 	std::ofstream file(filepath, std::ios::app);
 
@@ -137,11 +137,30 @@ void LibraryManager::addSongToPlaylist(Playlist& playlist, const fs::path& songP
 	file.close();
 }
 
-bool LibraryManager::isSongInPlaylist(const fs::path& targetPath) {
-	for (const Playlist& playlist : mPlaylists) {
-		for (const fs::path& path : playlist.songs) {
-			if (path == targetPath) return true;
-		}
+bool LibraryManager::removeSongFromPlaylist(Playlist& playlist, int songIndex) const {
+	if (songIndex < 0 || songIndex >= static_cast<int>(playlist.songs.size())) return false;
+
+	playlist.songs.erase(playlist.songs.begin() + songIndex);
+
+	const fs::path filepath = mPlaylistDir / (playlist.name + ".plst");
+	std::ofstream file(filepath, std::ios::trunc);
+	if (!file.is_open()) {
+		std::println("Failed to open playlist for rewriting: {}", filepath.string());
+	}
+
+	file << "Name: " << playlist.name << '\n';
+	for (const fs::path& song : playlist.songs) {
+		file << song.string() << '\n';
+	}
+
+	file.close();
+
+	return true;
+}
+
+bool LibraryManager::isSongInPlaylist(const fs::path& targetPath, const Playlist& playlist) {
+	for (const fs::path& path : playlist.songs) {
+		if (path == targetPath) return true;
 	}
 	return false;
 }

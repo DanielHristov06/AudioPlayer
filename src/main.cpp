@@ -249,27 +249,37 @@ int main() {
 
 		// Song List
 		static int popupIndex = -1;
+		static int popupPlaylistIndex = -1;
+		static fs::path currentlyPlayingPath;
 		ImGui::Begin("Songs");
 		ImGui::BeginChild("SongList", ImVec2(0, 0), true);
+
+		ImGui::Text("Song List:");
+		ImGui::Dummy(ImVec2(0.0f, 4.0f));
+		ImGui::Separator();
+		ImGui::Dummy(ImVec2(0.0f, 4.0f));
 		
-		for (int i = 0; i < manager.mSongs.size(); i++) {
+		for (int i = 0; i < static_cast<int>(manager.mSongs.size()); i++) {
 			const auto& song = manager.mSongs[i];
 
-			if (!manager.isSongInPlaylist(song)) {
-				if (ImGui::Selectable(song.stem().string().c_str(), manager.selectedIndex == i)) {
-					manager.selectedIndex = i;
-					manager.isPlayingFomPlaylist = false;
-					if (manager.selectedPlaylist != -1) {
-						manager.mPlaylists[manager.selectedPlaylist].selectedIndex = -1;
-						manager.selectedPlaylist = -1;
-					}
+			const std::string mainLabel = song.stem().string() + "##main_" + std::to_string(i);
+			if (ImGui::Selectable(mainLabel.c_str(), song == currentlyPlayingPath)) {
+				manager.selectedIndex = i;
+				manager.isPlayingFomPlaylist = false;
+				if (manager.selectedPlaylist != -1) {
+					manager.mPlaylists[manager.selectedPlaylist].selectedIndex = -1;
+					manager.selectedPlaylist = -1;
+				}
+				if (song != currentlyPlayingPath) {
 					player.play(song.string());
+					currentlyPlayingPath = song;
 				}
+			}
 
-				if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
-					ImGui::OpenPopup("SongContextMenu");
-					popupIndex = i;
-				}
+			if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
+				ImGui::OpenPopup("SongContextMenu");
+				popupIndex = i;
+				popupPlaylistIndex = -1;
 			}
 		}
 
@@ -277,36 +287,63 @@ int main() {
 		ImGui::Separator();
 		ImGui::Spacing();
 
-		for (const auto& playlist : manager.mPlaylists) {
+		for (int p = 0; p < static_cast<int>(manager.mPlaylists.size()); p++) {
+			auto& playlist = manager.mPlaylists[p];
 			if (ImGui::CollapsingHeader(playlist.name.c_str())) {
-				for (int i = 0; i < playlist.songs.size(); i++) {
+				for (int i = 0; i < static_cast<int>(playlist.songs.size()); i++) {
 					const auto& song = playlist.songs[i];
 
-					if (ImGui::Selectable(song.stem().string().c_str(), playlist.selectedIndex == i)) {
+					const std::string plLabel = song.stem().string() + "##pl_" + std::to_string(p) + "_" + std::to_string(i);
+					if (ImGui::Selectable(plLabel.c_str(), song == currentlyPlayingPath)) {
 						manager.selectedIndex = -1;
 						manager.isPlayingFomPlaylist = true;
-						manager.selectedPlaylist = i;
-						manager.mPlaylists[i].selectedIndex = i;
-						player.play(song.string());
+						manager.selectedPlaylist = p;
+						playlist.selectedIndex = i;
+						if (song != currentlyPlayingPath) {
+							player.play(song.string());
+							currentlyPlayingPath = song;
+						}
+					}
+
+					if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
+						ImGui::OpenPopup("SongContextMenu");
+						popupIndex = i;
+						popupPlaylistIndex = p;
 					}
 				}
 			}
 		}
 
 		if (ImGui::BeginPopup("SongContextMenu")) {
-			if (ImGui::MenuItem("Delete")) {
-				manager.erase(manager.mSongs[popupIndex]);
+			const fs::path& popupSong = (popupPlaylistIndex == -1)
+				? manager.mSongs[popupIndex] : manager.mPlaylists[popupPlaylistIndex].songs[popupIndex];
+
+			if (ImGui::MenuItem("Play")) {
+				player.play(popupSong.string());
+				currentlyPlayingPath = popupSong;
 				ImGui::CloseCurrentPopup();
+			}
+
+			if (popupPlaylistIndex == -1) {
+				if (ImGui::MenuItem("Delete")) {
+					manager.erase(manager.mSongs[popupIndex]);
+					ImGui::CloseCurrentPopup();
+				}
+			}
+			else {
+				if (ImGui::MenuItem("Remove from playlist")) {
+					manager.removeSongFromPlaylist(manager.mPlaylists[popupPlaylistIndex], popupIndex);
+					ImGui::CloseCurrentPopup();
+				}
 			}
 
 			ImGui::Separator();
 			
 			if (ImGui::BeginMenu("Add to playlist")) {
 				for (auto& playlist : manager.mPlaylists) {
-					if (ImGui::MenuItem(playlist.name.c_str())) {
-						if (!manager.isSongInPlaylist(manager.mSongs[popupIndex])) {
-							manager.addSongToPlaylist(playlist, manager.mSongs[popupIndex]);
-						}
+					const bool alreadyIn = manager.isSongInPlaylist(popupSong, playlist);
+					if (ImGui::MenuItem(playlist.name.c_str(), nullptr, false, !alreadyIn)) {
+						manager.addSongToPlaylist(playlist, popupSong);
 					}
 				}
 

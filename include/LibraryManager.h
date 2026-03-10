@@ -24,8 +24,9 @@ public:
 	bool erase(const fs::path& song);
 
 	bool createPlaylist(const std::string& playlist);
-	void addSongToPlaylist(Playlist& playlist, const fs::path& songPath);
-	bool isSongInPlaylist(const fs::path& targetPath);
+	void addSongToPlaylist(Playlist& playlist, const fs::path& songPath) const;
+	bool removeSongFromPlaylist(Playlist& playlist, int songIndex) const;
+	bool isSongInPlaylist(const fs::path& targetPath, const Playlist& playlist);
 
 private:
 	const char* mFilters[3] = { "*.mp3", "*.wav", "*.ogg" };

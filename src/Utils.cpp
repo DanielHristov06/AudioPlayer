@@ -2,7 +2,7 @@
 #include <format>
 
 namespace utils {
-	std::string formatTime(double& seconds) {
+	std::string formatTime(const double& seconds) {
 		const int s = static_cast<int>(seconds);
 		const int min = s / 60;
 		const int sec = s % 60;
