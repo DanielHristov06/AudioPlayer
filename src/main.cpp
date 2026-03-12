@@ -10,28 +10,10 @@
 #include "TextureLoader.h"
 #include "Utils.h"
 
-struct UIState {
-	GLuint playIcon{}, playIconHovered{};
-	GLuint pauseIcon{}, pauseIconHovered{};
-	GLuint volumeIcon{}, nextIcon{};
-
-	// Song List State
-	fs::path currentlyPlayingPath;
-	int popupIndex = -1;
-	int popupPlaylistIndex = -1;
-
-	// Player State
-	float volume = 1.0f;
-
-	// Playlist Window
-	bool playlistWindowOpen = false;
-	char playlistName[128] = "";
-};
-
 int main() {
 	LibraryManager manager;
 	AudioPlayer player;
-	UIState state;
+	utils::UIState state;
 
 	if (!glfwInit()) {
 		std::println("Could not initialize GLFW.\n");
@@ -202,13 +184,13 @@ int main() {
 		// Next Button
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 7.0f);
 		if (ImGui::ImageButton("NextButton", ImTextureRef((ImTextureID)state.nextIcon), ImVec2(64.0f, 64.0f))) {
-			utils::playNextSong(manager, player);
+			utils::playNextSong(state, manager, player);
 		}
 
 		// Prev Button
 		ImGui::SetCursorPos(ImVec2(playButPos.x - size - (64.0f * 0.5f), playButPos.y - 7.0f));
 		if (ImGui::ImageButton("PrevButton", ImTextureRef((ImTextureID)state.nextIcon), ImVec2(64.0f, 64.0f), ImVec2(1, 0), ImVec2(0, 1))) {
-			utils::playPrevSong(manager, player);
+			utils::playPrevSong(state, manager, player);
 		}
 		ImGui::PopStyleColor(3);
 
@@ -430,7 +412,7 @@ int main() {
 		static bool wasPlaying = false;
 		bool playing = player.isPlaying();
 		if (wasPlaying && !playing && player.hasFinished()) {
-			utils::playNextSong(manager, player);
+			utils::playNextSong(state, manager, player);
 		}
 		wasPlaying = playing;
 
