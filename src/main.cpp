@@ -301,7 +301,10 @@ int main() {
 
 		for (int p = 0; p < static_cast<int>(manager.mPlaylists.size()); p++) {
 			auto& playlist = manager.mPlaylists[p];
-			if (ImGui::CollapsingHeader(playlist.name.c_str())) {
+			const bool headerOpen = ImGui::CollapsingHeader(playlist.name.c_str());
+			const bool headerHovered = ImGui::IsItemHovered();
+
+			if (headerOpen) {
 				for (int i = 0; i < static_cast<int>(playlist.songs.size()); i++) {
 					const auto& song = playlist.songs[i];
 
@@ -325,7 +328,7 @@ int main() {
 				}
 			}
 
-			if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
+			if (headerHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
 				ImGui::OpenPopup("PlaylistContextMenu");
 				state.popupPlaylistIndex = p;
 			}

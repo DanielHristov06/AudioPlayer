@@ -28,7 +28,7 @@ selectedPlaylist(-1), selectedIndex(-1), isPlayingFomPlaylist(false) {
 		std::getline(file, line);
 		const std::string name = line.substr(6);
 
-		Playlist currentPlaylist(name, entry.path());
+		Playlist currentPlaylist(name, entry.path(), std::vector<fs::path>{});
 
 		while (std::getline(file, line)) {
 			const fs::path path(line);
