@@ -2,6 +2,9 @@
 #include <filesystem>
 #include <vector>
 #include <string>
+#include <cmrc/cmrc.hpp>
+
+CMRC_DECLARE(dlp);
 
 namespace fs = std::filesystem;
 
@@ -37,6 +40,9 @@ private:
 	fs::path mMainDir{};
 	fs::path mMusicDir{};
 	fs::path mPlaylistDir{};
+	fs::path mYtDlpDir{};
+	fs::path mYtDlpPath{};
 	fs::path getBasePath();
+	bool extractYtDlp();
 	void createDirectory(const fs::path& dir);
 };

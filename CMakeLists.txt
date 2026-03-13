@@ -37,6 +37,14 @@ cmrc_add_resource_library(player_resources ALIAS textures NAMESPACE icons
     "textures/next.png"
 )
 
+if (WIN32)
+    cmrc_add_resource_library(yt-dlp ALIAS downloader NAMESPACE dlp "vendors/yt-dlp/yt-dlp.exe")
+elseif (APPLE)
+    cmrc_add_resource_library(yt-dlp ALIAS downloader NAMESPACE dlp "vendors/yt-dlp/yt-dlp_macos")
+else()
+    cmrc_add_resource_library(yt-dlp ALIAS downloader NAMESPACE dlp "vendors/yt-dlp/yt-dlp")
+endif()
+
 add_executable(AudioPlayer "${AUDIOPLAYER_SOURCES}")
 
 target_compile_features(AudioPlayer PRIVATE cxx_std_23)
@@ -71,7 +79,7 @@ target_sources(AudioPlayer PRIVATE
 target_compile_definitions(AudioPlayer PRIVATE TEXTURE_DIR=\"${CMAKE_SOURCE_DIR}/textures\")
 target_compile_definitions(AudioPlayer PRIVATE IMGUI_IMPL_OPENGL_LOADER_GLAD GLFW_INCLUDE_NONE)
 
-target_link_libraries(AudioPlayer PRIVATE miniaudio tinyfiledialogs stbimage player_resources)
+target_link_libraries(AudioPlayer PRIVATE miniaudio tinyfiledialogs stbimage player_resources yt-dlp)
 
 if (WIN32)
     target_link_libraries(AudioPlayer PRIVATE glfw opengl32)

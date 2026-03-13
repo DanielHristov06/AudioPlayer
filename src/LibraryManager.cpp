@@ -5,11 +5,13 @@
 #include <fstream>
 #include <system_error>
 
-LibraryManager::LibraryManager() : mMainDir(getBasePath() / "AudioPlayer"), mMusicDir(mMainDir / "Music"), mPlaylistDir(mMainDir / "Playlists"),
-selectedPlaylist(-1), selectedIndex(-1), isPlayingFomPlaylist(false) {
+LibraryManager::LibraryManager() : mMainDir(getBasePath() / "AudioPlayer"), mMusicDir(mMainDir / "Music"),
+mPlaylistDir(mMainDir / "Playlists"), mYtDlpDir(mMainDir / "yt-dlp"), selectedPlaylist(-1), selectedIndex(-1), isPlayingFomPlaylist(false) {
 	createDirectory(mMainDir);
 	createDirectory(mMusicDir);
 	createDirectory(mPlaylistDir);
+	createDirectory(mYtDlpDir);
+	extractYtDlp();
 
 	for (const auto& entry : fs::directory_iterator(mMusicDir)) {
 		const fs::path p(entry);
@@ -199,6 +201,52 @@ fs::path LibraryManager::getBasePath() {
 	const char* home = std::getenv("HOME");
 	return home ? fs::path(home) / ".local" / "share" : fs::current_path();
 #endif
+}
+
+bool LibraryManager::extractYtDlp() {
+#if defined(_WIN32)
+	mYtDlpPath = mYtDlpDir / "yt-dlp.exe";
+	const std::string resourcePath = "vendors/yt-dlp/yt-dlp.exe";
+#elif defined(__APPLE__)
+	mYtDlpPath = mYtDlpDir / "yt-dlp_macos";
+	const std::string resourcePath = "vendors/yt-dlp/yt-dlp_macos;
+#else
+	mYtDlpPath = mYtDlpDir / "yt-dlp";
+	const std::string resourcePath = "vendors/yt-dlp/yt-dlp;
+#endif
+
+	if (fs::exists(mYtDlpPath)) return true;
+
+	const auto fs = cmrc::dlp::get_filesystem();
+
+	if (!fs::exists(resourcePath)) {
+		std::println("yt-dlp was not found in the embeded system: {}", resourcePath);
+		return false;
+	}
+
+	const auto file = fs.open(resourcePath);
+
+	std::ofstream out(mYtDlpPath, std::ios::binary);
+	if (!out.is_open()) {
+		std::println("Failed to open output file for yt-dlp extraction: {}", mYtDlpPath.string());
+		return false;
+	}
+
+	out.write(reinterpret_cast<const char*>(file.begin()), file.size());
+	out.close();
+
+#if !defined(_WIN32)
+	std::error_code ec;
+	fs::prmissions(mYtDlpPath, fs::perms::owner_exec | fs::perms::group_exec | fs::perms::others_exec, fs::perm_options::add, ec);
+
+	if (ec) {
+		srd::println("Failed to set executable permissions on yt-dlp: {}", ex.message());
+		return false;
+	}
+#endif
+
+	std::println("yt-dlp extracted succesfully: {}", mYtDlpPath.string());
+	return true;
 }
 
 void LibraryManager::createDirectory(const fs::path& dir) {
