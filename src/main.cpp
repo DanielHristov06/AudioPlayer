@@ -253,27 +253,29 @@ int main() {
 		ImGui::Separator();
 		ImGui::Dummy(ImVec2(0.0f, 4.0f));
 		
-		for (int i = 0; i < static_cast<int>(manager.mSongs.size()); i++) {
-			const auto& song = manager.mSongs[i];
+		if (ImGui::CollapsingHeader("All Songs")) {
+			for (int i = 0; i < static_cast<int>(manager.mSongs.size()); i++) {
+				const auto& song = manager.mSongs[i];
 
-			const std::string mainLabel = song.stem().string() + "##main_" + std::to_string(i);
-			if (ImGui::Selectable(mainLabel.c_str(), song == state.currentlyPlayingPath)) {
-				manager.selectedIndex = i;
-				manager.isPlayingFomPlaylist = false;
-				if (manager.selectedPlaylist != -1) {
-					manager.mPlaylists[manager.selectedPlaylist].selectedIndex = -1;
-					manager.selectedPlaylist = -1;
+				const std::string mainLabel = song.stem().string() + "##main_" + std::to_string(i);
+				if (ImGui::Selectable(mainLabel.c_str(), song == state.currentlyPlayingPath)) {
+					manager.selectedIndex = i;
+					manager.isPlayingFomPlaylist = false;
+					if (manager.selectedPlaylist != -1) {
+						manager.mPlaylists[manager.selectedPlaylist].selectedIndex = -1;
+						manager.selectedPlaylist = -1;
+					}
+					if (song != state.currentlyPlayingPath) {
+						player.play(song.string());
+						state.currentlyPlayingPath = song;
+					}
 				}
-				if (song != state.currentlyPlayingPath) {
-					player.play(song.string());
-					state.currentlyPlayingPath = song;
-				}
-			}
 
-			if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
-				ImGui::OpenPopup("SongContextMenu");
-				state.popupIndex = i;
-				state.popupPlaylistIndex = -1;
+				if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
+					ImGui::OpenPopup("SongContextMenu");
+					state.popupIndex = i;
+					state.popupPlaylistIndex = -1;
+				}
 			}
 		}
 
