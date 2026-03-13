@@ -395,8 +395,9 @@ int main() {
 			const float totalButtonWidth = (buttonWidth * 2) + spacing;
 			ImGui::SetCursorPosX((windowWidth - totalButtonWidth) * 0.5f);
 			if (ImGui::Button("Cancel")) {
-				state.playlistWindowOpen = false;
-				state.playlistName[0] = '\0';
+				//state.playlistWindowOpen = false;
+				//state.playlistName[0] = '\0';
+				manager.download("https://www.youtube.com/watch?v=4vwse_8jC5k");
 			}
 			ImGui::SameLine();
 

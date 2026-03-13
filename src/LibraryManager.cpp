@@ -187,6 +187,102 @@ bool LibraryManager::isSongInPlaylist(const fs::path& targetPath, const Playlist
 	return false;
 }
 
+bool LibraryManager::download(const std::string& url) {
+	if (getDownloadStatus() == DownloadStatus::Downloading) return false;
+
+	const std::string outputTemplate = (mMusicDir / "%(title)s.%(ext)s").string();
+
+#if defined(_WIN32)
+	std::string cmd = "\"" + mYtDlpPath.string() + "\" -x --audio-format mp3 --audio-quality 0 -o \"" + outputTemplate + "\" " + url;
+	STARTUPINFOA si{};
+	si.cb = sizeof(si);
+	PROCESS_INFORMATION pi{};
+
+	const BOOL success = CreateProcessA(nullptr, cmd.data(), nullptr, nullptr, FALSE, CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi);
+
+	if (!success) {
+		if (pi.hProcess) CloseHandle(pi.hProcess);
+		if (pi.hThread) CloseHandle(pi.hThread);
+		std::println("Failed to launch yt-dlp process. Error code: {}", GetLastError());
+		mDownloadStatus = DownloadStatus::Failed;
+		return false;
+	}
+
+	mProcessHandle = pi.hProcess;
+	mThreadHandle = pi.hThread;
+	mDownloadStatus = DownloadStatus::Downloading;
+	return true;
+#else
+	pid_t pid = fork();
+
+	if (pid < 0) {
+		std::println("fork() failed");
+		mDownloadStatus = DownloadStatus::Failed;
+		return false;
+	}
+
+	if (pid == 0) {
+		execl(mYtDlpPath.c_str(), "yt-dlp", "-x", "--audio-format", "mp3", "--audio-quality", "0", "-o", outputTemplate.c_str(), url.c_str(), nullptr);
+		std::println("execl(), failed - ut - dlp could not be launcehd");
+		_exit(1);
+	}
+
+	mProcessId = pid;
+	mDownloadStatus = DownloadStatus::Downloading;
+	return true;
+#endif
+}
+
+LibraryManager::DownloadStatus LibraryManager::getDownloadStatus() {
+	if (mDownloadStatus != DownloadStatus::Downloading) return mDownloadStatus;
+
+#if defined(_WIN32)
+	if (mProcessHandle == nullptr) return DownloadStatus::Idle;
+	DWORD exitCode;
+	GetExitCodeProcess(mProcessHandle, &exitCode);
+	if (exitCode == STILL_ACTIVE) {
+		return DownloadStatus::Downloading;
+	}
+	CloseHandle(mProcessHandle);
+	CloseHandle(mThreadHandle);
+	mProcessHandle = nullptr;
+	mThreadHandle = nullptr;
+	mDownloadStatus = (exitCode == 0) ? DownloadStatus::Success : DownloadStatus::Failed;
+	if (mDownloadStatus == DownloadStatus::Success) refreshSongs();
+	return mDownloadStatus;
+#else
+	if (mProcessId < 0) return DownloadStatus::Idle;
+	int status;
+	const pid_t resilt = waitpid(mProcessId, &status, WNOHANG);
+	if (resilt == 0) {
+		return DownloadStatus::Downloading;
+	}
+	mProcessId = -1;
+	if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+		mDownloadStatus = DownloadStatus::Success;
+		refreshSongs();
+	}
+	else {
+		mDownloadStatus = DownloadStatus::Failed;
+	}
+
+	return mDownloadStatus;
+#endif
+}
+
+void LibraryManager::refreshSongs() {
+	mSongs.clear();
+
+	for (const auto& entry : fs::directory_iterator(mMusicDir)) {
+		const fs::path p(entry);
+		const std::string ext = p.extension().string();
+
+		if (ext == ".mp3" || ext == ".wav" || ext == ".ogg") {
+			mSongs.push_back(p);
+		}
+	}
+}
+
 fs::path LibraryManager::getBasePath() {
 #if defined(_WIN32)
 	const char* appData = std::getenv("APPDATA");
@@ -209,22 +305,22 @@ bool LibraryManager::extractYtDlp() {
 	const std::string resourcePath = "vendors/yt-dlp/yt-dlp.exe";
 #elif defined(__APPLE__)
 	mYtDlpPath = mYtDlpDir / "yt-dlp_macos";
-	const std::string resourcePath = "vendors/yt-dlp/yt-dlp_macos;
+	const std::string resourcePath = "vendors/yt-dlp/yt-dlp_macos";
 #else
 	mYtDlpPath = mYtDlpDir / "yt-dlp";
-	const std::string resourcePath = "vendors/yt-dlp/yt-dlp;
+	const std::string resourcePath = "vendors/yt-dlp/yt-dlp";
 #endif
 
 	if (fs::exists(mYtDlpPath)) return true;
 
-	const auto fs = cmrc::dlp::get_filesystem();
+	const auto fileSystem = cmrc::dlp::get_filesystem();
 
-	if (!fs::exists(resourcePath)) {
-		std::println("yt-dlp was not found in the embeded system: {}", resourcePath);
+	if (!fileSystem.exists(resourcePath)) {
+		std::println("yt-dlp was not found in the embedded  system: {}", resourcePath);
 		return false;
 	}
 
-	const auto file = fs.open(resourcePath);
+	const auto file = fileSystem.open(resourcePath);
 
 	std::ofstream out(mYtDlpPath, std::ios::binary);
 	if (!out.is_open()) {
@@ -237,10 +333,10 @@ bool LibraryManager::extractYtDlp() {
 
 #if !defined(_WIN32)
 	std::error_code ec;
-	fs::prmissions(mYtDlpPath, fs::perms::owner_exec | fs::perms::group_exec | fs::perms::others_exec, fs::perm_options::add, ec);
+	fs::permissions(mYtDlpPath, fs::perms::owner_exec | fs::perms::group_exec | fs::perms::others_exec, fs::perm_options::add, ec);
 
 	if (ec) {
-		srd::println("Failed to set executable permissions on yt-dlp: {}", ex.message());
+		std::println("Failed to set executable permissions on yt-dlp: {}", ec.message());
 		return false;
 	}
 #endif
