@@ -45,6 +45,7 @@ if (WIN32)
 elseif (APPLE)
     cmrc_add_resource_library(yt-dlp ALIAS downloader NAMESPACE dlp
         "vendors/yt-dlp/yt-dlp_macos"
+        "vendors/yt-dlp/ffmpeg_macos"
     )
 else()
     cmrc_add_resource_library(yt-dlp ALIAS downloader NAMESPACE dlp
