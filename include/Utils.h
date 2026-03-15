@@ -26,4 +26,6 @@ namespace utils {
 	std::string formatTime(const double& seconds);
 	void playNextSong(UIState& state, LibraryManager& manager, AudioPlayer& player);
 	void playPrevSong(UIState& state, LibraryManager& manager, AudioPlayer& player);
+	fs::path getBasePath();
+	void createDirectory(const fs::path& dir);
 }

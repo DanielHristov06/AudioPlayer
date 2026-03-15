@@ -1,5 +1,7 @@
 #include "Utils.h"
 #include <format>
+#include <print>
+#include <system_error>
 
 namespace utils {
 	std::string formatTime(const double& seconds) {
@@ -66,6 +68,36 @@ namespace utils {
 
 			player.play(currPlaylist.songs[currPlaylist.selectedIndex].string());
 			state.currentlyPlayingPath = currPlaylist.songs[currPlaylist.selectedIndex];
+		}
+	}
+
+	fs::path getBasePath() {
+	#if defined(_WIN32)
+		const char* appData = std::getenv("APPDATA");
+		return appData ? fs::path(appData) : fs::current_path();
+	#elif defined(__APPLE__)
+		const char* home = std::getenv("HOME");
+		return home ? fs::path(home) / "Library" / "Application Support" : fs::current_path();
+	#else
+		const char* xdgData = std::getenv("XDG_DATA_HOME");
+		if (xdgData) return fs::path(xdgData);
+
+		const char* home = std::getenv("HOME");
+		return home ? fs::path(home) / ".local" / "share" : fs::current_path();
+	#endif
+	}
+
+	void createDirectory(const fs::path& dir) {
+		if (!fs::exists(dir)) {
+			std::error_code ec;
+			fs::create_directories(dir, ec);
+
+			if (ec) {
+				std::println("Failed to create directory {} : {}", dir.string(), ec.message());
+			}
+		}
+		else if (!fs::is_directory(dir)) {
+			std::println("Path '{}' exists but is not a directory.\n", dir.string());
 		}
 	}
 }

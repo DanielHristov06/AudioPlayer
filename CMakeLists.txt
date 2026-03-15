@@ -38,11 +38,19 @@ cmrc_add_resource_library(player_resources ALIAS textures NAMESPACE icons
 )
 
 if (WIN32)
-    cmrc_add_resource_library(yt-dlp ALIAS downloader NAMESPACE dlp "vendors/yt-dlp/yt-dlp.exe")
+    cmrc_add_resource_library(yt-dlp ALIAS downloader NAMESPACE dlp
+        "vendors/yt-dlp/yt-dlp.exe"
+        "vendors/yt-dlp/ffmpeg.exe"
+    )
 elseif (APPLE)
-    cmrc_add_resource_library(yt-dlp ALIAS downloader NAMESPACE dlp "vendors/yt-dlp/yt-dlp_macos")
+    cmrc_add_resource_library(yt-dlp ALIAS downloader NAMESPACE dlp
+        "vendors/yt-dlp/yt-dlp_macos"
+    )
 else()
-    cmrc_add_resource_library(yt-dlp ALIAS downloader NAMESPACE dlp "vendors/yt-dlp/yt-dlp")
+    cmrc_add_resource_library(yt-dlp ALIAS downloader NAMESPACE dlp
+        "vendors/yt-dlp/yt-dlp"
+        "vendors/yt-dlp/ffmpeg"
+    )
 endif()
 
 add_executable(AudioPlayer "${AUDIOPLAYER_SOURCES}")

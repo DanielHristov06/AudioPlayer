@@ -7,12 +7,14 @@
 #include "imgui_internal.h"
 #include "LibraryManager.h"
 #include "AudioPlayer.h"
+#include "Downloader.h"
 #include "TextureLoader.h"
 #include "Utils.h"
 
 int main() {
 	LibraryManager manager;
 	AudioPlayer player;
+	Downloader downloader;
 	utils::UIState state;
 
 	if (!glfwInit()) {
@@ -397,7 +399,7 @@ int main() {
 			if (ImGui::Button("Cancel")) {
 				//state.playlistWindowOpen = false;
 				//state.playlistName[0] = '\0';
-				manager.download("https://www.youtube.com/watch?v=4vwse_8jC5k");
+				downloader.download("https://www.youtube.com/watch?v=ESckSFaad-M", manager.getMusicDir());
 			}
 			ImGui::SameLine();
 
@@ -416,6 +418,11 @@ int main() {
 			utils::playNextSong(state, manager, player);
 		}
 		wasPlaying = playing;
+
+		const auto downloadStatus = downloader.getDownloadStatus();
+		if (downloadStatus == Downloader::DownloadStatus::Success) {
+			manager.refreshSongs();
+		}
 
 		ImGui::Render();
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
