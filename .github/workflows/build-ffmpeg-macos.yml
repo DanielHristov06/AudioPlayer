@@ -1,0 +1,49 @@
+name: Build ffmpeg macOS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Install dependencies
+        run: brew install nasm lame pkg-config
+
+      - name: Clone ffmpeg
+        run: git clone https://git.ffmpeg.org/ffmpeg.git
+
+      - name: Configure
+        working-directory: ffmpeg
+        run: |
+          ./configure \
+            --prefix=./build \
+            --enable-small \
+            --disable-everything \
+            --enable-ffmpeg \
+            --enable-protocol=file \
+            --enable-demuxer=matroska,mov,mp3 \
+            --enable-decoder=opus,aac,mp3 \
+            --enable-encoder=libmp3lame \
+            --enable-muxer=mp3,mov,mp4 \
+            --enable-filter=aformat,aresample \
+            --enable-libmp3lame \
+            --disable-debug \
+            --disable-doc \
+            --disable-network \
+            --disable-avdevice \
+            --disable-swscale \
+            --pkg-config-flags="--static" \
+            --extra-ldflags="-static"
+
+      - name: Build
+        working-directory: ffmpeg
+        run: |
+          make -j$(sysctl -n hw.logicalcpu)
+          make install
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ffmpeg-macos
+          path: ffmpeg/build/bin/ffmpeg
