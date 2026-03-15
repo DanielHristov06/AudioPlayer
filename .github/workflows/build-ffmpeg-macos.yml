@@ -1,7 +1,9 @@
 name: Build ffmpeg macOS
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - yt-dlp-introduction
 
 jobs:
   build:
