@@ -49,7 +49,7 @@ bool Downloader::download(const std::string& url, const fs::path& musicDir) {
 
 	if (pid == 0) {
 		execl(mYtDlpPath.c_str(),
-			"yt-dlp", "-x", "--audio-format", "mp3", "--audio-quality", "0", "--restrict-filenames", "--ffmpeg-location", "-o",
+			"yt-dlp", "-x", "--audio-format", "mp3", "--audio-quality", "0", "--restrict-filenames", "--ffmpeg-location", mYtDlpDir.c_str(), "-o",
 			outputTemplate.c_str(), url.c_str(), nullptr);
 		std::println("execl(), failed - ut - dlp could not be launcehd");
 		_exit(1);
