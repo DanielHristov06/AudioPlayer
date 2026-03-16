@@ -27,6 +27,7 @@ namespace utils {
 		}
 		else {
 			Playlist& currPlaylist = manager.mPlaylists[manager.selectedPlaylist];
+			if (currPlaylist.songs.empty()) return;
 
 			if (currPlaylist.selectedIndex < 0) {
 				currPlaylist.selectedIndex = 0;
@@ -57,6 +58,7 @@ namespace utils {
 		}
 		else {
 			Playlist& currPlaylist = manager.mPlaylists[manager.selectedPlaylist];
+			if (currPlaylist.songs.empty()) return;
 
 			if (currPlaylist.selectedIndex < 0) {
 				currPlaylist.selectedIndex = static_cast<int>(currPlaylist.songs.size() - 1);

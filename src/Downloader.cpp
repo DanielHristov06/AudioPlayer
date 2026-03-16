@@ -17,8 +17,7 @@ bool Downloader::download(const std::string& url, const fs::path& musicDir) {
 	const std::string outputTemplate = (musicDir / "%(title)s.%(ext)s").string();
 
 #if defined(_WIN32)
-	std::string cmd = "\"" + mYtDlpPath.string() + "\" -x --audio-format mp3 --audio-quality 0 --restrict-filenames -o \"" + outputTemplate + "\" " + url;
-	std::println("cmd: {}", cmd);
+	std::string cmd = "\"" + mYtDlpPath.string() + "\" -x --audio-format mp3 --audio-quality 0 --windows-filenames -o \"" + outputTemplate + "\" " + url;
 
 	STARTUPINFOA si{};
 	si.cb = sizeof(si);
@@ -49,7 +48,7 @@ bool Downloader::download(const std::string& url, const fs::path& musicDir) {
 
 	if (pid == 0) {
 		execl(mYtDlpPath.c_str(),
-			"yt-dlp", "-x", "--audio-format", "mp3", "--audio-quality", "0", "--restrict-filenames", "--ffmpeg-location", mYtDlpDir.c_str(), "-o",
+			"yt-dlp", "-x", "--audio-format", "mp3", "--audio-quality", "0", "--windows-filenames", "--ffmpeg-location", mYtDlpDir.c_str(), "-o",
 			outputTemplate.c_str(), url.c_str(), nullptr);
 		std::println("execl(), failed - ut - dlp could not be launcehd");
 		_exit(1);

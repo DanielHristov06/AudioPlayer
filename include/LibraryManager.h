@@ -25,7 +25,7 @@ public:
 	bool isPlayingFomPlaylist;
 	bool import();
 	bool erase(const fs::path& song);
-	fs::path& getMusicDir();
+	const fs::path& getMusicDir();
 
 	bool createPlaylist(const std::string& playlist);
 	bool removePlaylist(Playlist& playlist);
