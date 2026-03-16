@@ -110,6 +110,12 @@ int main() {
 					state.playlistWindowOpen = !state.playlistWindowOpen;
 					if (state.playlistWindowOpen) state.playlistName[0] = '\0';
 				}
+
+				ImGui::Separator();
+
+				if (ImGui::MenuItem("Download", nullptr, false, downloader.isReady())) {
+
+				}
 			}
 			ImGui::EndMenuBar();
 

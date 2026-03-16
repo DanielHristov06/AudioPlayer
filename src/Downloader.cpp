@@ -93,6 +93,10 @@ Downloader::DownloadStatus Downloader::getDownloadStatus() {
 #endif
 }
 
+bool Downloader::isReady() const {
+	return fs::exists(mYtDlpPath) && fs::exists(mFfmpegPath);
+}
+
 bool Downloader::extractYtDlp() {
 #if defined(_WIN32)
 	mYtDlpPath = mYtDlpDir / "yt-dlp.exe";

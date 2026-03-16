@@ -21,6 +21,7 @@ public:
 	enum class DownloadStatus { Idle, Downloading, Success, Failed };
 	bool download(const std::string& url, const fs::path& musicDir);
 	DownloadStatus getDownloadStatus();
+	bool isReady() const;
 
 private:
 	fs::path mMainDir{};
