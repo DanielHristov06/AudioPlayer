@@ -21,6 +21,12 @@ namespace utils {
 		// Playlist Window
 		bool playlistWindowOpen = false;
 		char playlistName[128] = "";
+
+		// Download WIndow
+		bool downloadWindowOpen = false;
+		char url[128] = "";
+		int selectedFormat = 0;
+		const char* formats[4] = { ".mp3", ".ogg", ".wav", ".flac" };
 	};
 
 	std::string formatTime(const double& seconds);

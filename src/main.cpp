@@ -114,7 +114,7 @@ int main() {
 				ImGui::Separator();
 
 				if (ImGui::MenuItem("Download", nullptr, false, downloader.isReady())) {
-
+					state.downloadWindowOpen = !state.downloadWindowOpen;
 				}
 			}
 			ImGui::EndMenuBar();
@@ -413,6 +413,52 @@ int main() {
 				manager.createPlaylist(plName);
 				state.playlistName[0] = '\0';
 			}
+
+			ImGui::End();
+		}
+
+		if (state.downloadWindowOpen) {
+			ImGui::SetNextWindowSize(ImVec2(350, 180));
+
+			ImGui::Begin("Download a song", &state.downloadWindowOpen, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+
+			const float windowWidth = ImGui::GetWindowSize().x;
+			const ImVec2 widgetSpacing = ImVec2(0.0f, 8.0f);
+
+			const char* labelText = "URL";
+			const float labelWidth = ImGui::CalcTextSize(labelText).x;
+			ImGui::SetCursorPosX((windowWidth - labelWidth) * 0.5f);
+			ImGui::Text(labelText);
+			ImGui::Dummy(widgetSpacing);
+
+			const float inputWidth = windowWidth * 0.75f;
+			ImGui::PushItemWidth(inputWidth);
+			ImGui::InputText("##UrlInput", state.url, IM_ARRAYSIZE(state.url));
+			ImGui::PopItemWidth();
+			ImGui::SameLine();
+
+			ImGui::SetNextItemWidth(65.0f);
+			ImGui::Combo("##Format", &state.selectedFormat, state.formats, IM_ARRAYSIZE(state.formats));
+
+			ImGui::Dummy(widgetSpacing);
+			ImGui::Separator();
+			ImGui::Dummy(widgetSpacing);
+
+			const float buttonWidth = 50.0f;
+			const float spacing = ImGui::GetStyle().ItemSpacing.x;
+			const float totalButtonWidth = (buttonWidth * 2) + spacing;
+			ImGui::SetCursorPosX((windowWidth - totalButtonWidth) * 0.5f);
+			if (ImGui::Button("Cancel")) {
+				state.downloadWindowOpen = false;
+				state.url[0] = '\0';
+			}
+			ImGui::SameLine();
+
+			if (ImGui::Button("Download")) {
+				downloader.download(state.url, manager.getMusicDir());
+				state.url[0] = '\0';
+			}
+
 
 			ImGui::End();
 		}
