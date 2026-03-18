@@ -7,7 +7,7 @@
 #include <system_error>
 
 LibraryManager::LibraryManager() : mMainDir(utils::getBasePath() / "AudioPlayer"), mMusicDir(mMainDir / "Music"),
-mPlaylistDir(mMainDir / "Playlists"), selectedPlaylist(-1), selectedIndex(-1), isPlayingFomPlaylist(false) {
+mPlaylistDir(mMainDir / "Playlists"), selectedPlaylist(-1), selectedIndex(-1), isPlayingFomPlaylist(false), refreshing(false) {
 	utils::createDirectory(mMainDir);
 	utils::createDirectory(mMusicDir);
 	utils::createDirectory(mPlaylistDir);
@@ -191,6 +191,7 @@ bool LibraryManager::isSongInPlaylist(const fs::path& targetPath, const Playlist
 }
 
 void LibraryManager::refreshSongs() {
+	refreshing = true;
 	mSongs.clear();
 
 	for (const auto& entry : fs::directory_iterator(mMusicDir)) {
@@ -201,4 +202,5 @@ void LibraryManager::refreshSongs() {
 			mSongs.push_back(p);
 		}
 	}
+	refreshing = false;
 }

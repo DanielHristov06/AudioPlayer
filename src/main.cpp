@@ -257,31 +257,39 @@ int main() {
 		ImGui::BeginChild("SongList", ImVec2(0, 0), true);
 
 		ImGui::Text("Song List:");
+
+		ImGui::SameLine(ImGui::GetContentRegionAvail().x - 60.0f + ImGui::GetCursorPosX());
+		if (ImGui::Button("Refresh")) {
+			if (!manager.refreshing) manager.refreshSongs();
+		}
+
 		ImGui::Dummy(ImVec2(0.0f, 4.0f));
 		ImGui::Separator();
 		ImGui::Dummy(ImVec2(0.0f, 4.0f));
 		
-		for (int i = 0; i < static_cast<int>(manager.mSongs.size()); i++) {
-			const auto& song = manager.mSongs[i];
+		if (ImGui::CollapsingHeader("All Songs")) {
+			for (int i = 0; i < static_cast<int>(manager.mSongs.size()); i++) {
+				const auto& song = manager.mSongs[i];
 
-			const std::string mainLabel = song.stem().string() + "##main_" + std::to_string(i);
-			if (ImGui::Selectable(mainLabel.c_str(), song == state.currentlyPlayingPath)) {
-				manager.selectedIndex = i;
-				manager.isPlayingFomPlaylist = false;
-				if (manager.selectedPlaylist != -1) {
-					manager.mPlaylists[manager.selectedPlaylist].selectedIndex = -1;
-					manager.selectedPlaylist = -1;
+				const std::string mainLabel = song.stem().string() + "##main_" + std::to_string(i);
+				if (ImGui::Selectable(mainLabel.c_str(), song == state.currentlyPlayingPath)) {
+					manager.selectedIndex = i;
+					manager.isPlayingFomPlaylist = false;
+					if (manager.selectedPlaylist != -1) {
+						manager.mPlaylists[manager.selectedPlaylist].selectedIndex = -1;
+						manager.selectedPlaylist = -1;
+					}
+					if (song != state.currentlyPlayingPath) {
+						player.play(song.string());
+						state.currentlyPlayingPath = song;
+					}
 				}
-				if (song != state.currentlyPlayingPath) {
-					player.play(song.string());
-					state.currentlyPlayingPath = song;
-				}
-			}
 
-			if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
-				ImGui::OpenPopup("SongContextMenu");
-				state.popupIndex = i;
-				state.popupPlaylistIndex = -1;
+				if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
+					ImGui::OpenPopup("SongContextMenu");
+					state.popupIndex = i;
+					state.popupPlaylistIndex = -1;
+				}
 			}
 		}
 
@@ -417,6 +425,7 @@ int main() {
 			ImGui::End();
 		}
 
+		// Download Window
 		if (state.downloadWindowOpen) {
 			ImGui::SetNextWindowSize(ImVec2(350, 180));
 
@@ -459,6 +468,18 @@ int main() {
 				state.url[0] = '\0';
 			}
 
+			std::string statusText = "";
+
+			switch (downloader.getDownloadStatus()) {
+			case Downloader::DownloadStatus::Downloading:
+				statusText = "Downloading..."; break;
+			case Downloader::DownloadStatus::Failed:
+				statusText = "Download Failed"; break;
+			case Downloader::DownloadStatus::Success:
+				statusText = "Download Successful"; break;
+			}
+
+			ImGui::Text(statusText.c_str());
 
 			ImGui::End();
 		}

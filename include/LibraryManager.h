@@ -23,6 +23,7 @@ public:
 	int selectedPlaylist;
 	int selectedIndex;
 	bool isPlayingFomPlaylist;
+	bool refreshing;
 	bool import();
 	bool erase(const fs::path& song);
 	const fs::path& getMusicDir();
