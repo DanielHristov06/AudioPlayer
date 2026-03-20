@@ -14,7 +14,7 @@ mPlaylistDir(mMainDir / "Playlists"), selectedPlaylist(-1), selectedIndex(-1), i
 
 	for (const auto& entry : fs::directory_iterator(mMusicDir)) {
 		const fs::path p(entry);
-		const std::string ext = p.extension().string();
+		const std::string ext = reinterpret_cast<const char*>(p.extension().u8string().c_str());
 
 		if (ext == ".mp3" || ext == ".wav" || ext == ".ogg") {
 			mSongs.push_back(p);
@@ -200,7 +200,7 @@ void LibraryManager::refreshSongs() {
 
 	for (const auto& entry : fs::directory_iterator(mMusicDir)) {
 		const fs::path p(entry);
-		const std::string ext = p.extension().string();
+		const std::string ext = reinterpret_cast<const char*>(p.extension().u8string().c_str());
 
 		if (ext == ".mp3" || ext == ".wav" || ext == ".ogg") {
 			mSongs.push_back(p);

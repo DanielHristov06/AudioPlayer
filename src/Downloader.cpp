@@ -2,7 +2,6 @@
 #include "Utils.h"
 #include <print>
 #include <fstream>
-#include <system_error>
 
 Downloader::Downloader() : mMainDir(utils::getBasePath() / "AudioPlayer"), mYtDlpDir(mMainDir / "yt-dlp")
 {
@@ -18,12 +17,13 @@ bool Downloader::download(const std::string& url, const fs::path& musicDir) {
 
 #if defined(_WIN32)
 	std::string cmd = "\"" + mYtDlpPath.string() + "\" -x --audio-format mp3 --audio-quality 0 --windows-filenames -o \"" + outputTemplate + "\" " + url;
+	std::wstring wCmd = utils::toWide(cmd);
 
-	STARTUPINFOA si{};
+	STARTUPINFOW si{};
 	si.cb = sizeof(si);
 	PROCESS_INFORMATION pi{};
 
-	const BOOL success = CreateProcessA(nullptr, cmd.data(), nullptr, nullptr, FALSE, CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi);
+	const BOOL success = CreateProcessW(nullptr, wCmd.data(), nullptr, nullptr, FALSE, CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi);
 
 	if (!success) {
 		if (pi.hProcess) CloseHandle(pi.hProcess);

@@ -35,4 +35,8 @@ namespace utils {
 	fs::path getBasePath();
 	void createDirectory(const fs::path& dir);
 	void openInExplorer(const fs::path& path);
+
+#if defined(_WIN32)
+	std::wstring toWide(const std::string& str);
+#endif
 }

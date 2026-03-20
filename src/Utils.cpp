@@ -116,4 +116,14 @@ namespace utils {
 		system(("xdg-open \"" + path.string() + "\"").c_str());
 	#endif
 	}
+
+#if defined(_WIN32)
+	std::wstring toWide(const std::string& str) {
+		if (str.empty()) return {};
+		const int size = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, nullptr, 0);
+		std::wstring result(size - 1, 0);
+		MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, result.data(), size);
+		return result;
+	}
+#endif
 }
