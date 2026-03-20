@@ -30,12 +30,11 @@ bool AudioPlayer::play(const std::filesystem::path& path) {
 	}
 
 #if defined(_WIN32)
-	std::wstring wPath = utils::toWide(path);
-	if (ma_sound_init_from_file_w(&mEngine, wPath.c_str(), NULL, NULL, NULL, &mCurrentSound) != MA_SUCCESS) {
+	if (ma_sound_init_from_file_w(&mEngine, path.c_str(), NULL, NULL, NULL, &mCurrentSound) != MA_SUCCESS) {
 #else
 	if (ma_sound_init_from_file(&mEngine, path.c_str(), NULL, NULL, NULL, &mCurrentSound) != MA_SUCCESS) {
 #endif
-		std::println("Failed to load sound from: {}\n", path);
+		std::println("Failed to load sound from: {}\n", path.string());
 		return false;
 	}
 

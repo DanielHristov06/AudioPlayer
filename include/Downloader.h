@@ -34,6 +34,7 @@ private:
 #if defined(_WIN32)
 	HANDLE mProcessHandle = nullptr;
 	HANDLE mThreadHandle = nullptr;
+	std::wstring toWide(const std::string& str);
 #else
 	pid_t mProcessId = -1;
 #endif

@@ -161,11 +161,11 @@ int main() {
 		// Song Name
 		if (manager.selectedIndex >= 0 || manager.selectedPlaylist >= 0) {
 			if (!manager.isPlayingFomPlaylist) {
-				ImGui::Text(manager.mSongs[manager.selectedIndex].stem().string().c_str());
+				ImGui::Text("%s", utils::toUtf8(manager.mSongs[manager.selectedIndex].stem()).c_str());
 			}
 			else {
 				Playlist selectedPlaylist = manager.mPlaylists[manager.selectedPlaylist];
-				ImGui::Text(selectedPlaylist.songs[selectedPlaylist.selectedIndex].stem().string().c_str());
+				ImGui::Text("%s", utils::toUtf8(selectedPlaylist.songs[selectedPlaylist.selectedIndex].stem().c_str()));
 			}
 			ImGui::SameLine();
 			ImGui::SetCursorPosX(curPos);
@@ -280,7 +280,7 @@ int main() {
 			for (int i = 0; i < static_cast<int>(manager.mSongs.size()); i++) {
 				const auto& song = manager.mSongs[i];
 
-				const std::string mainLabel = song.stem().string() + "##main_" + std::to_string(i);
+				const std::string mainLabel = utils::toUtf8(song.stem()) + "##main_" + std::to_string(i);
 				if (ImGui::Selectable(mainLabel.c_str(), song == state.currentlyPlayingPath)) {
 					manager.selectedIndex = i;
 					manager.isPlayingFomPlaylist = false;
@@ -289,7 +289,7 @@ int main() {
 						manager.selectedPlaylist = -1;
 					}
 					if (song != state.currentlyPlayingPath) {
-						player.play(song.string());
+						player.play(song);
 						state.currentlyPlayingPath = song;
 					}
 				}
@@ -315,14 +315,14 @@ int main() {
 				for (int i = 0; i < static_cast<int>(playlist.songs.size()); i++) {
 					const auto& song = playlist.songs[i];
 
-					const std::string plLabel = song.stem().string() + "##pl_" + std::to_string(p) + "_" + std::to_string(i);
+					const std::string plLabel = utils::toUtf8(song.stem()) + "##pl_" + std::to_string(p) + "_" + std::to_string(i);
 					if (ImGui::Selectable(plLabel.c_str(), song == state.currentlyPlayingPath)) {
 						manager.selectedIndex = -1;
 						manager.isPlayingFomPlaylist = true;
 						manager.selectedPlaylist = p;
 						playlist.selectedIndex = i;
 						if (song != state.currentlyPlayingPath) {
-							player.play(song.string());
+							player.play(song);
 							state.currentlyPlayingPath = song;
 						}
 					}
@@ -346,7 +346,7 @@ int main() {
 				? manager.mSongs[state.popupIndex] : manager.mPlaylists[state.popupPlaylistIndex].songs[state.popupIndex];
 
 			if (ImGui::MenuItem("Play")) {
-				player.play(popupSong.string());
+				player.play(popupSong);
 				state.currentlyPlayingPath = popupSong;
 				ImGui::CloseCurrentPopup();
 			}

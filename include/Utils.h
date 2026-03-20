@@ -36,7 +36,5 @@ namespace utils {
 	void createDirectory(const fs::path& dir);
 	void openInExplorer(const fs::path& path);
 
-#if defined(_WIN32)
-	std::wstring toWide(const std::string& str);
-#endif
+	std::string toUtf8(const fs::path& path);
 }

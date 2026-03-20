@@ -4,7 +4,7 @@
 #include <system_error>
 
 #if defined(_WIN32)
-#include <Windows.h>
+#include <WIndows.h>
 #endif
 
 namespace utils {
@@ -26,7 +26,7 @@ namespace utils {
 				manager.selectedIndex = (manager.selectedIndex + 1) % static_cast<int>(manager.mSongs.size());
 			}
 
-			player.play(manager.mSongs[manager.selectedIndex].string());
+			player.play(manager.mSongs[manager.selectedIndex]);
 			state.currentlyPlayingPath = manager.mSongs[manager.selectedIndex];
 		}
 		else {
@@ -40,7 +40,7 @@ namespace utils {
 				currPlaylist.selectedIndex = (currPlaylist.selectedIndex + 1) % static_cast<int>(currPlaylist.songs.size());
 			}
 
-			player.play(currPlaylist.songs[currPlaylist.selectedIndex].string());
+			player.play(currPlaylist.songs[currPlaylist.selectedIndex]);
 			state.currentlyPlayingPath = currPlaylist.songs[currPlaylist.selectedIndex];
 		}
 	}
@@ -57,7 +57,7 @@ namespace utils {
 				manager.selectedIndex = (manager.selectedIndex - 1 + size) % size;
 			}
 
-			player.play(manager.mSongs[manager.selectedIndex].string());
+			player.play(manager.mSongs[manager.selectedIndex]);
 			state.currentlyPlayingPath = manager.mSongs[manager.selectedIndex];
 		}
 		else {
@@ -72,7 +72,7 @@ namespace utils {
 				currPlaylist.selectedIndex = (currPlaylist.selectedIndex - 1 + size) % size;
 			}
 
-			player.play(currPlaylist.songs[currPlaylist.selectedIndex].string());
+			player.play(currPlaylist.songs[currPlaylist.selectedIndex]);
 			state.currentlyPlayingPath = currPlaylist.songs[currPlaylist.selectedIndex];
 		}
 	}
@@ -109,7 +109,7 @@ namespace utils {
 
 	void openInExplorer(const fs::path& path) {
 	#if defined(_WIN32)
-		ShellExecuteA(nullptr, "open", path.string().c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+		ShellExecuteW(nullptr, L"open", path.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
 	#elif defined(__APPLE__)
 		system(("open \"" + path.string() + "\"").c_str());
 	#else
@@ -117,13 +117,8 @@ namespace utils {
 	#endif
 	}
 
-#if defined(_WIN32)
-	std::wstring toWide(const std::string& str) {
-		if (str.empty()) return {};
-		const int size = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, nullptr, 0);
-		std::wstring result(size - 1, 0);
-		MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, result.data(), size);
-		return result;
+	std::string toUtf8(const fs::path& path) {
+		const auto u8 = path.u8string();
+		return std::string(reinterpret_cast<const char*>(u8.c_str()), u8.size());
 	}
-#endif
 }

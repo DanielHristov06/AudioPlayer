@@ -17,7 +17,7 @@ bool Downloader::download(const std::string& url, const fs::path& musicDir) {
 
 #if defined(_WIN32)
 	std::string cmd = "\"" + mYtDlpPath.string() + "\" -x --audio-format mp3 --audio-quality 0 --windows-filenames -o \"" + outputTemplate + "\" " + url;
-	std::wstring wCmd = utils::toWide(cmd);
+	std::wstring wCmd = toWide(cmd);
 
 	STARTUPINFOW si{};
 	si.cb = sizeof(si);
@@ -155,3 +155,13 @@ bool Downloader::extractBinary(const std::string& resourcePath, const fs::path& 
 	std::println("Extracted successfully: {}", outputPath.string());
 	return true;
 }
+
+#if defined(_WIN32)
+std::wstring Downloader::toWide(const std::string& str) {
+	if (str.empty()) return {};
+	const int size = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, nullptr, 0);
+	std::wstring result(size - 1, 0);
+	MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, result.data(), size);
+	return result;
+}
+#endif
