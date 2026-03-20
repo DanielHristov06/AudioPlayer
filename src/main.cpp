@@ -69,7 +69,10 @@ int main() {
 		const double currentTime = glfwGetTime();
 		const double targetTime = 1.0 / 60.0;
 
-		if (player.isPlaying() && (currentTime - lastTime < targetTime)) {
+		const auto downloadStatus = downloader.getDownloadStatus();
+		const bool isDownloading = downloadStatus == Downloader::DownloadStatus::Downloading;
+
+		if ((player.isPlaying() || isDownloading) && (currentTime - lastTime < targetTime)) {
 			const double remaining = targetTime - (currentTime - lastTime);
 			glfwWaitEventsTimeout(remaining);
 		}
@@ -115,6 +118,12 @@ int main() {
 
 				if (ImGui::MenuItem("Download", nullptr, false, downloader.isReady())) {
 					state.downloadWindowOpen = !state.downloadWindowOpen;
+				}
+
+				ImGui::Separator();
+
+				if (ImGui::MenuItem("Open in explorer")) {
+					utils::openInExplorer(manager.getMainDir());
 				}
 			}
 			ImGui::EndMenuBar();
@@ -470,7 +479,7 @@ int main() {
 
 			std::string statusText = "";
 
-			switch (downloader.getDownloadStatus()) {
+			switch (downloadStatus) {
 			case Downloader::DownloadStatus::Downloading:
 				statusText = "Downloading..."; break;
 			case Downloader::DownloadStatus::Failed:
@@ -491,7 +500,6 @@ int main() {
 		}
 		wasPlaying = playing;
 
-		const auto downloadStatus = downloader.getDownloadStatus();
 		if (downloadStatus == Downloader::DownloadStatus::Success) {
 			manager.refreshSongs();
 		}

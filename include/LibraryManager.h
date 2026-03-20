@@ -26,6 +26,7 @@ public:
 	bool refreshing;
 	bool import();
 	bool erase(const fs::path& song);
+	const fs::path& getMainDir();
 	const fs::path& getMusicDir();
 
 	bool createPlaylist(const std::string& playlist);

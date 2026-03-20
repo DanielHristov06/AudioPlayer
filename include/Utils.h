@@ -34,4 +34,5 @@ namespace utils {
 	void playPrevSong(UIState& state, LibraryManager& manager, AudioPlayer& player);
 	fs::path getBasePath();
 	void createDirectory(const fs::path& dir);
+	void openInExplorer(const fs::path& path);
 }

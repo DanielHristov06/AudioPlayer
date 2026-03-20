@@ -3,6 +3,10 @@
 #include <print>
 #include <system_error>
 
+#if defined(_WIN32)
+#include <Windows.h>
+#endif
+
 namespace utils {
 	std::string formatTime(const double& seconds) {
 		const int s = static_cast<int>(seconds);
@@ -101,5 +105,15 @@ namespace utils {
 		else if (!fs::is_directory(dir)) {
 			std::println("Path '{}' exists but is not a directory.\n", dir.string());
 		}
+	}
+
+	void openInExplorer(const fs::path& path) {
+	#if defined(_WIN32)
+		ShellExecuteA(nullptr, "open", path.string().c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+	#elif defined(__APPLE__)
+		system(("open \"" + path.string() + "\"").c_str());
+	#else
+		system(("xdg-open \"" + path.string() + "\"").c_str());
+	#endif
 	}
 }

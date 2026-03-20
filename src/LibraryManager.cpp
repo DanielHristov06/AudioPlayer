@@ -104,6 +104,10 @@ bool LibraryManager::erase(const fs::path& song) {
 	return false;
 }
 
+const fs::path& LibraryManager::getMainDir() {
+	return mMainDir;
+}
+
 const fs::path& LibraryManager::getMusicDir() {
 	return mMusicDir;
 }
