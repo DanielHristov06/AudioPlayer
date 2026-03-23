@@ -53,6 +53,7 @@ int main() {
 	state.pauseIconHovered = loadTextureFromResource("textures/pause2.png");
 	state.volumeIcon = loadTextureFromResource("textures/volume.png");
 	state.nextIcon = loadTextureFromResource("textures/next.png");
+	state.repeatIcon = loadTextureFromResource("textures/repeat.png");
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -200,6 +201,7 @@ int main() {
 
 		// Next Button
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 7.0f);
+		const ImVec2 prevButCurPos = ImGui::GetCursorPos();
 		if (ImGui::ImageButton("NextButton", ImTextureRef((ImTextureID)state.nextIcon), ImVec2(64.0f, 64.0f))) {
 			utils::playNextSong(state, manager, player);
 		}
@@ -208,6 +210,13 @@ int main() {
 		ImGui::SetCursorPos(ImVec2(playButPos.x - size - (64.0f * 0.5f), playButPos.y - 7.0f));
 		if (ImGui::ImageButton("PrevButton", ImTextureRef((ImTextureID)state.nextIcon), ImVec2(64.0f, 64.0f), ImVec2(1, 0), ImVec2(0, 1))) {
 			utils::playPrevSong(state, manager, player);
+		}
+		ImGui::SameLine();
+
+		// Repeat Button
+		ImGui::SetCursorPos(ImVec2(prevButCurPos.x + 64.0f, prevButCurPos.y + 20.0f));
+		if (ImGui::ImageButton("RepeatButton", ImTextureRef((ImTextureID)state.repeatIcon), ImVec2(24.0f, 24.0f))) {
+			state.repeatEnabled = !state.repeatEnabled;
 		}
 		ImGui::PopStyleColor(3);
 
@@ -291,6 +300,7 @@ int main() {
 					if (song != state.currentlyPlayingPath) {
 						player.play(song);
 						state.currentlyPlayingPath = song;
+						state.repeatUsed = false;
 					}
 				}
 
@@ -324,6 +334,7 @@ int main() {
 						if (song != state.currentlyPlayingPath) {
 							player.play(song);
 							state.currentlyPlayingPath = song;
+							state.repeatUsed = false;
 						}
 					}
 

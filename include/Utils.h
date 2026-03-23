@@ -8,7 +8,11 @@ namespace utils {
 	struct UIState {
 		GLuint playIcon{}, playIconHovered{};
 		GLuint pauseIcon{}, pauseIconHovered{};
-		GLuint volumeIcon{}, nextIcon{};
+		GLuint volumeIcon{}, nextIcon{}, repeatIcon{};
+
+		// Repeat State
+		bool repeatEnabled = false;
+		bool repeatUsed = false;
 
 		// Song List State
 		fs::path currentlyPlayingPath;

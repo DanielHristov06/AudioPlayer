@@ -18,6 +18,15 @@ namespace utils {
 	void playNextSong(UIState& state, LibraryManager& manager, AudioPlayer& player) {
 		if (manager.mSongs.empty()) return;
 
+		if (state.repeatEnabled && !state.repeatUsed) {
+			state.repeatUsed = true;
+			player.play(state.currentlyPlayingPath);
+			return;
+		}
+		else {
+			state.repeatUsed = false;
+		}
+
 		if (!manager.isPlayingFomPlaylist) {
 			if (manager.selectedIndex < 0) {
 				manager.selectedIndex = 0;
