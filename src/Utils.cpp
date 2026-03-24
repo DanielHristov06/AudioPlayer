@@ -4,7 +4,7 @@
 #include <system_error>
 
 #if defined(_WIN32)
-#include <WIndows.h>
+#include <Windows.h>
 #endif
 
 namespace utils {
@@ -18,8 +18,12 @@ namespace utils {
 	void playNextSong(UIState& state, LibraryManager& manager, AudioPlayer& player) {
 		if (manager.mSongs.empty()) return;
 
-		if (state.repeatEnabled && !state.repeatUsed) {
+		if (state.repeatState == UIState::RepeatState::Once && !state.repeatUsed) {
 			state.repeatUsed = true;
+			player.play(state.currentlyPlayingPath);
+			return;
+		}
+		else if (state.repeatState == UIState::RepeatState::Always) {
 			player.play(state.currentlyPlayingPath);
 			return;
 		}

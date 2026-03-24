@@ -9,9 +9,11 @@ namespace utils {
 		GLuint playIcon{}, playIconHovered{};
 		GLuint pauseIcon{}, pauseIconHovered{};
 		GLuint volumeIcon{}, nextIcon{}, repeatIcon{};
+		GLuint shuffleIcon{};
 
 		// Repeat State
-		bool repeatEnabled = false;
+		enum class RepeatState { Off, Once, Always };
+		RepeatState repeatState = RepeatState::Off;
 		bool repeatUsed = false;
 
 		// Song List State

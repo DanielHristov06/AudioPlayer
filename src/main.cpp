@@ -54,6 +54,7 @@ int main() {
 	state.volumeIcon = loadTextureFromResource("textures/volume.png");
 	state.nextIcon = loadTextureFromResource("textures/next.png");
 	state.repeatIcon = loadTextureFromResource("textures/repeat.png");
+	state.shuffleIcon = loadTextureFromResource("textures/shuffle.png");
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -166,7 +167,7 @@ int main() {
 			}
 			else {
 				Playlist selectedPlaylist = manager.mPlaylists[manager.selectedPlaylist];
-				ImGui::Text("%s", utils::toUtf8(selectedPlaylist.songs[selectedPlaylist.selectedIndex].stem().c_str()));
+				ImGui::Text("%s", utils::toUtf8(selectedPlaylist.songs[selectedPlaylist.selectedIndex].stem()).c_str());
 			}
 			ImGui::SameLine();
 			ImGui::SetCursorPosX(curPos);
@@ -201,22 +202,34 @@ int main() {
 
 		// Next Button
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 7.0f);
-		const ImVec2 prevButCurPos = ImGui::GetCursorPos();
+		const ImVec2 nextButCurPos = ImGui::GetCursorPos();
 		if (ImGui::ImageButton("NextButton", ImTextureRef((ImTextureID)state.nextIcon), ImVec2(64.0f, 64.0f))) {
 			utils::playNextSong(state, manager, player);
 		}
+		ImGui::SameLine();
 
 		// Prev Button
 		ImGui::SetCursorPos(ImVec2(playButPos.x - size - (64.0f * 0.5f), playButPos.y - 7.0f));
+		const ImVec2 prevButCurPos = ImGui::GetCursorPos();
 		if (ImGui::ImageButton("PrevButton", ImTextureRef((ImTextureID)state.nextIcon), ImVec2(64.0f, 64.0f), ImVec2(1, 0), ImVec2(0, 1))) {
 			utils::playPrevSong(state, manager, player);
 		}
 		ImGui::SameLine();
 
+		ImGui::SetCursorPos(ImVec2(prevButCurPos.x - 32.0f, prevButCurPos.y + 20.0f));
+		if (ImGui::ImageButton("ShuffleButton", ImTextureRef((ImTextureID)state.shuffleIcon), ImVec2(24.0f, 24.0f))) {
+
+		}
+		ImGui::SameLine();
+
 		// Repeat Button
-		ImGui::SetCursorPos(ImVec2(prevButCurPos.x + 64.0f, prevButCurPos.y + 20.0f));
+		ImGui::SetCursorPos(ImVec2(nextButCurPos.x + 64.0f, nextButCurPos.y + 20.0f));
 		if (ImGui::ImageButton("RepeatButton", ImTextureRef((ImTextureID)state.repeatIcon), ImVec2(24.0f, 24.0f))) {
-			state.repeatEnabled = !state.repeatEnabled;
+			switch (state.repeatState) {
+			case utils::UIState::RepeatState::Off: state.repeatState = utils::UIState::RepeatState::Once; break;
+			case utils::UIState::RepeatState::Once: state.repeatState = utils::UIState::RepeatState::Always; break;
+			case utils::UIState::RepeatState::Always: state.repeatState = utils::UIState::RepeatState::Off; break;
+			}
 		}
 		ImGui::PopStyleColor(3);
 

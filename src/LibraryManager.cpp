@@ -156,7 +156,7 @@ void LibraryManager::addSongToPlaylist(Playlist& playlist, const fs::path& songP
 	std::ofstream file(filepath, std::ios::app);
 
 	if (file.is_open()) {
-		file << songPath.string() << '\n';
+		file << utils::toUtf8(songPath) << '\n';
 		playlist.songs.push_back(songPath);
 	}
 	else {
