@@ -7,12 +7,14 @@
 #include "imgui_internal.h"
 #include "LibraryManager.h"
 #include "AudioPlayer.h"
+#include "Downloader.h"
 #include "TextureLoader.h"
 #include "Utils.h"
 
 int main() {
 	LibraryManager manager;
 	AudioPlayer player;
+	Downloader downloader;
 	utils::UIState state;
 
 	if (!glfwInit()) {
@@ -51,6 +53,8 @@ int main() {
 	state.pauseIconHovered = loadTextureFromResource("textures/pause2.png");
 	state.volumeIcon = loadTextureFromResource("textures/volume.png");
 	state.nextIcon = loadTextureFromResource("textures/next.png");
+	state.repeatIcon = loadTextureFromResource("textures/repeat.png");
+	state.shuffleIcon = loadTextureFromResource("textures/shuffle.png");
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -67,7 +71,10 @@ int main() {
 		const double currentTime = glfwGetTime();
 		const double targetTime = 1.0 / 60.0;
 
-		if (player.isPlaying() && (currentTime - lastTime < targetTime)) {
+		const auto downloadStatus = downloader.getDownloadStatus();
+		const bool isDownloading = downloadStatus == Downloader::DownloadStatus::Downloading;
+
+		if ((player.isPlaying() || isDownloading) && (currentTime - lastTime < targetTime)) {
 			const double remaining = targetTime - (currentTime - lastTime);
 			glfwWaitEventsTimeout(remaining);
 		}
@@ -108,6 +115,18 @@ int main() {
 					state.playlistWindowOpen = !state.playlistWindowOpen;
 					if (state.playlistWindowOpen) state.playlistName[0] = '\0';
 				}
+
+				ImGui::Separator();
+
+				if (ImGui::MenuItem("Download", nullptr, false, downloader.isReady())) {
+					state.downloadWindowOpen = !state.downloadWindowOpen;
+				}
+
+				ImGui::Separator();
+
+				if (ImGui::MenuItem("Open in explorer")) {
+					utils::openInExplorer(manager.getMainDir());
+				}
 			}
 			ImGui::EndMenuBar();
 
@@ -144,11 +163,11 @@ int main() {
 		// Song Name
 		if (manager.selectedIndex >= 0 || manager.selectedPlaylist >= 0) {
 			if (!manager.isPlayingFomPlaylist) {
-				ImGui::Text(manager.mSongs[manager.selectedIndex].stem().string().c_str());
+				ImGui::Text("%s", utils::toUtf8(manager.mSongs[manager.selectedIndex].stem()).c_str());
 			}
 			else {
 				Playlist selectedPlaylist = manager.mPlaylists[manager.selectedPlaylist];
-				ImGui::Text(selectedPlaylist.songs[selectedPlaylist.selectedIndex].stem().string().c_str());
+				ImGui::Text("%s", utils::toUtf8(selectedPlaylist.songs[selectedPlaylist.selectedIndex].stem()).c_str());
 			}
 			ImGui::SameLine();
 			ImGui::SetCursorPosX(curPos);
@@ -183,14 +202,34 @@ int main() {
 
 		// Next Button
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 7.0f);
+		const ImVec2 nextButCurPos = ImGui::GetCursorPos();
 		if (ImGui::ImageButton("NextButton", ImTextureRef((ImTextureID)state.nextIcon), ImVec2(64.0f, 64.0f))) {
 			utils::playNextSong(state, manager, player);
 		}
+		ImGui::SameLine();
 
 		// Prev Button
 		ImGui::SetCursorPos(ImVec2(playButPos.x - size - (64.0f * 0.5f), playButPos.y - 7.0f));
+		const ImVec2 prevButCurPos = ImGui::GetCursorPos();
 		if (ImGui::ImageButton("PrevButton", ImTextureRef((ImTextureID)state.nextIcon), ImVec2(64.0f, 64.0f), ImVec2(1, 0), ImVec2(0, 1))) {
 			utils::playPrevSong(state, manager, player);
+		}
+		ImGui::SameLine();
+
+		ImGui::SetCursorPos(ImVec2(prevButCurPos.x - 32.0f, prevButCurPos.y + 20.0f));
+		if (ImGui::ImageButton("ShuffleButton", ImTextureRef((ImTextureID)state.shuffleIcon), ImVec2(24.0f, 24.0f))) {
+
+		}
+		ImGui::SameLine();
+
+		// Repeat Button
+		ImGui::SetCursorPos(ImVec2(nextButCurPos.x + 64.0f, nextButCurPos.y + 20.0f));
+		if (ImGui::ImageButton("RepeatButton", ImTextureRef((ImTextureID)state.repeatIcon), ImVec2(24.0f, 24.0f))) {
+			switch (state.repeatState) {
+			case utils::UIState::RepeatState::Off: state.repeatState = utils::UIState::RepeatState::Once; break;
+			case utils::UIState::RepeatState::Once: state.repeatState = utils::UIState::RepeatState::Always; break;
+			case utils::UIState::RepeatState::Always: state.repeatState = utils::UIState::RepeatState::Off; break;
+			}
 		}
 		ImGui::PopStyleColor(3);
 
@@ -249,6 +288,12 @@ int main() {
 		ImGui::BeginChild("SongList", ImVec2(0, 0), true);
 
 		ImGui::Text("Song List:");
+
+		ImGui::SameLine(ImGui::GetContentRegionAvail().x - 60.0f + ImGui::GetCursorPosX());
+		if (ImGui::Button("Refresh")) {
+			if (!manager.refreshing) manager.refreshSongs();
+		}
+
 		ImGui::Dummy(ImVec2(0.0f, 4.0f));
 		ImGui::Separator();
 		ImGui::Dummy(ImVec2(0.0f, 4.0f));
@@ -257,7 +302,7 @@ int main() {
 			for (int i = 0; i < static_cast<int>(manager.mSongs.size()); i++) {
 				const auto& song = manager.mSongs[i];
 
-				const std::string mainLabel = song.stem().string() + "##main_" + std::to_string(i);
+				const std::string mainLabel = utils::toUtf8(song.stem()) + "##main_" + std::to_string(i);
 				if (ImGui::Selectable(mainLabel.c_str(), song == state.currentlyPlayingPath)) {
 					manager.selectedIndex = i;
 					manager.isPlayingFomPlaylist = false;
@@ -266,8 +311,9 @@ int main() {
 						manager.selectedPlaylist = -1;
 					}
 					if (song != state.currentlyPlayingPath) {
-						player.play(song.string());
+						player.play(song);
 						state.currentlyPlayingPath = song;
+						state.repeatUsed = false;
 					}
 				}
 
@@ -292,15 +338,16 @@ int main() {
 				for (int i = 0; i < static_cast<int>(playlist.songs.size()); i++) {
 					const auto& song = playlist.songs[i];
 
-					const std::string plLabel = song.stem().string() + "##pl_" + std::to_string(p) + "_" + std::to_string(i);
+					const std::string plLabel = utils::toUtf8(song.stem()) + "##pl_" + std::to_string(p) + "_" + std::to_string(i);
 					if (ImGui::Selectable(plLabel.c_str(), song == state.currentlyPlayingPath)) {
 						manager.selectedIndex = -1;
 						manager.isPlayingFomPlaylist = true;
 						manager.selectedPlaylist = p;
 						playlist.selectedIndex = i;
 						if (song != state.currentlyPlayingPath) {
-							player.play(song.string());
+							player.play(song);
 							state.currentlyPlayingPath = song;
+							state.repeatUsed = false;
 						}
 					}
 
@@ -323,7 +370,7 @@ int main() {
 				? manager.mSongs[state.popupIndex] : manager.mPlaylists[state.popupPlaylistIndex].songs[state.popupIndex];
 
 			if (ImGui::MenuItem("Play")) {
-				player.play(popupSong.string());
+				player.play(popupSong);
 				state.currentlyPlayingPath = popupSong;
 				ImGui::CloseCurrentPopup();
 			}
@@ -411,12 +458,75 @@ int main() {
 			ImGui::End();
 		}
 
+		// Download Window
+		if (state.downloadWindowOpen) {
+			ImGui::SetNextWindowSize(ImVec2(350, 180));
+
+			ImGui::Begin("Download a song", &state.downloadWindowOpen, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+
+			const float windowWidth = ImGui::GetWindowSize().x;
+			const ImVec2 widgetSpacing = ImVec2(0.0f, 8.0f);
+
+			const char* labelText = "URL";
+			const float labelWidth = ImGui::CalcTextSize(labelText).x;
+			ImGui::SetCursorPosX((windowWidth - labelWidth) * 0.5f);
+			ImGui::Text(labelText);
+			ImGui::Dummy(widgetSpacing);
+
+			const float inputWidth = windowWidth * 0.75f;
+			ImGui::PushItemWidth(inputWidth);
+			ImGui::InputText("##UrlInput", state.url, IM_ARRAYSIZE(state.url));
+			ImGui::PopItemWidth();
+			ImGui::SameLine();
+
+			ImGui::SetNextItemWidth(65.0f);
+			ImGui::Combo("##Format", &state.selectedFormat, state.formats, IM_ARRAYSIZE(state.formats));
+
+			ImGui::Dummy(widgetSpacing);
+			ImGui::Separator();
+			ImGui::Dummy(widgetSpacing);
+
+			const float buttonWidth = 50.0f;
+			const float spacing = ImGui::GetStyle().ItemSpacing.x;
+			const float totalButtonWidth = (buttonWidth * 2) + spacing;
+			ImGui::SetCursorPosX((windowWidth - totalButtonWidth) * 0.5f);
+			if (ImGui::Button("Cancel")) {
+				state.downloadWindowOpen = false;
+				state.url[0] = '\0';
+			}
+			ImGui::SameLine();
+
+			if (ImGui::Button("Download")) {
+				downloader.download(state.url, manager.getMusicDir());
+				state.url[0] = '\0';
+			}
+
+			std::string statusText = "";
+
+			switch (downloadStatus) {
+			case Downloader::DownloadStatus::Downloading:
+				statusText = "Downloading..."; break;
+			case Downloader::DownloadStatus::Failed:
+				statusText = "Download Failed"; break;
+			case Downloader::DownloadStatus::Success:
+				statusText = "Download Successful"; break;
+			}
+
+			ImGui::Text(statusText.c_str());
+
+			ImGui::End();
+		}
+
 		static bool wasPlaying = false;
 		bool playing = player.isPlaying();
 		if (wasPlaying && !playing && player.hasFinished()) {
 			utils::playNextSong(state, manager, player);
 		}
 		wasPlaying = playing;
+
+		if (downloadStatus == Downloader::DownloadStatus::Success) {
+			manager.refreshSongs();
+		}
 
 		ImGui::Render();
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);

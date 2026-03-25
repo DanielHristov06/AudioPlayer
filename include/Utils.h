@@ -8,7 +8,13 @@ namespace utils {
 	struct UIState {
 		GLuint playIcon{}, playIconHovered{};
 		GLuint pauseIcon{}, pauseIconHovered{};
-		GLuint volumeIcon{}, nextIcon{};
+		GLuint volumeIcon{}, nextIcon{}, repeatIcon{};
+		GLuint shuffleIcon{};
+
+		// Repeat State
+		enum class RepeatState { Off, Once, Always };
+		RepeatState repeatState = RepeatState::Off;
+		bool repeatUsed = false;
 
 		// Song List State
 		fs::path currentlyPlayingPath;
@@ -21,9 +27,20 @@ namespace utils {
 		// Playlist Window
 		bool playlistWindowOpen = false;
 		char playlistName[128] = "";
+
+		// Download WIndow
+		bool downloadWindowOpen = false;
+		char url[128] = "";
+		int selectedFormat = 0;
+		const char* formats[4] = { ".mp3", ".ogg", ".wav", ".flac" };
 	};
 
 	std::string formatTime(const double& seconds);
 	void playNextSong(UIState& state, LibraryManager& manager, AudioPlayer& player);
 	void playPrevSong(UIState& state, LibraryManager& manager, AudioPlayer& player);
+	fs::path getBasePath();
+	void createDirectory(const fs::path& dir);
+	void openInExplorer(const fs::path& path);
+
+	std::string toUtf8(const fs::path& path);
 }

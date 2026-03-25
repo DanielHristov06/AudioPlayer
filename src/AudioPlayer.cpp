@@ -1,4 +1,5 @@
 #include "AudioPlayer.h"
+#include "Utils.h"
 #include <print>
 
 AudioPlayer::AudioPlayer() : mVolume(1.0f) {
@@ -20,7 +21,7 @@ AudioPlayer::~AudioPlayer() {
 	ma_engine_uninit(&mEngine);
 }
 
-bool AudioPlayer::play(const std::string& path) {
+bool AudioPlayer::play(const std::filesystem::path& path) {
 	if (!checkInit()) return false;
 
 	if (mHasSound) {
@@ -28,8 +29,12 @@ bool AudioPlayer::play(const std::string& path) {
 		mHasSound = false;
 	}
 
+#if defined(_WIN32)
+	if (ma_sound_init_from_file_w(&mEngine, path.c_str(), NULL, NULL, NULL, &mCurrentSound) != MA_SUCCESS) {
+#else
 	if (ma_sound_init_from_file(&mEngine, path.c_str(), NULL, NULL, NULL, &mCurrentSound) != MA_SUCCESS) {
-		std::println("Failed to load sound from: {}\n", path);
+#endif
+		std::println("Failed to load sound from: {}\n", path.string());
 		return false;
 	}
 

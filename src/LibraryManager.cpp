@@ -1,19 +1,20 @@
 #include "LibraryManager.h"
 #include "tinyfiledialogs.h"
+#include "Utils.h"
 #include <print>
 #include <ranges>
 #include <fstream>
 #include <system_error>
 
-LibraryManager::LibraryManager() : mMainDir(getBasePath() / "AudioPlayer"), mMusicDir(mMainDir / "Music"), mPlaylistDir(mMainDir / "Playlists"),
-selectedPlaylist(-1), selectedIndex(-1), isPlayingFomPlaylist(false) {
-	createDirectory(mMainDir);
-	createDirectory(mMusicDir);
-	createDirectory(mPlaylistDir);
+LibraryManager::LibraryManager() : mMainDir(utils::getBasePath() / "AudioPlayer"), mMusicDir(mMainDir / "Music"),
+mPlaylistDir(mMainDir / "Playlists"), selectedPlaylist(-1), selectedIndex(-1), isPlayingFomPlaylist(false), refreshing(false) {
+	utils::createDirectory(mMainDir);
+	utils::createDirectory(mMusicDir);
+	utils::createDirectory(mPlaylistDir);
 
 	for (const auto& entry : fs::directory_iterator(mMusicDir)) {
 		const fs::path p(entry);
-		const std::string ext = p.extension().string();
+		const std::string ext = reinterpret_cast<const char*>(p.extension().u8string().c_str());
 
 		if (ext == ".mp3" || ext == ".wav" || ext == ".ogg") {
 			mSongs.push_back(p);
@@ -103,6 +104,14 @@ bool LibraryManager::erase(const fs::path& song) {
 	return false;
 }
 
+const fs::path& LibraryManager::getMainDir() {
+	return mMainDir;
+}
+
+const fs::path& LibraryManager::getMusicDir() {
+	return mMusicDir;
+}
+
 bool LibraryManager::createPlaylist(const std::string& playlist) {
 	const fs::path filepath = mPlaylistDir / (playlist + ".plst");
 
@@ -147,7 +156,7 @@ void LibraryManager::addSongToPlaylist(Playlist& playlist, const fs::path& songP
 	std::ofstream file(filepath, std::ios::app);
 
 	if (file.is_open()) {
-		file << songPath.string() << '\n';
+		file << utils::toUtf8(songPath) << '\n';
 		playlist.songs.push_back(songPath);
 	}
 	else {
@@ -185,27 +194,17 @@ bool LibraryManager::isSongInPlaylist(const fs::path& targetPath, const Playlist
 	return false;
 }
 
-fs::path LibraryManager::getBasePath() {
-#if defined(_WIN32)
-	const char* appData = std::getenv("APPDATA");
-	return appData ? fs::path(appData) : fs::current_path();
-#elif defined(__APPLE__)
-	const char* home = std::getenv("HOME");
-	return home ? fs::path(home) / "Library" / "Application Support" : fs::current_path();
-#else
-	const char* xdgData = std::getenv("XDG_DATA_HOME");
-	if (xdgData) return fs::path(xdgData);
+void LibraryManager::refreshSongs() {
+	refreshing = true;
+	mSongs.clear();
 
-	const char* home = std::getenv("HOME");
-	return home ? fs::path(home) / ".local" / "share" : fs::current_path();
-#endif
-}
+	for (const auto& entry : fs::directory_iterator(mMusicDir)) {
+		const fs::path p(entry);
+		const std::string ext = reinterpret_cast<const char*>(p.extension().u8string().c_str());
 
-void LibraryManager::createDirectory(const fs::path& dir) {
-	if (!fs::exists(dir)) {
-		fs::create_directory(dir);
+		if (ext == ".mp3" || ext == ".wav" || ext == ".ogg") {
+			mSongs.push_back(p);
+		}
 	}
-	else if (!fs::is_directory(dir)) {
-		std::println("Path '{}' exists but is not a directory.\n", dir.string());
-	}
+	refreshing = false;
 }

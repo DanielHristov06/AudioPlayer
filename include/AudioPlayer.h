@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <filesystem>
 #include "miniaudio.h"
 
 class AudioPlayer {
@@ -12,7 +13,7 @@ public:
 	AudioPlayer(AudioPlayer&&) = delete;
 	AudioPlayer& operator=(AudioPlayer&&) = delete;
 
-	bool play(const std::string& path);
+	bool play(const std::filesystem::path& path);
 	bool stop();
 	bool pause();
 	bool resume();
