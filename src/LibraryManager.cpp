@@ -5,9 +5,11 @@
 #include <ranges>
 #include <fstream>
 #include <system_error>
+#include <numeric>
+#include <random>
 
 LibraryManager::LibraryManager() : mMainDir(utils::getBasePath() / "AudioPlayer"), mMusicDir(mMainDir / "Music"),
-mPlaylistDir(mMainDir / "Playlists"), selectedPlaylist(-1), selectedIndex(-1), isPlayingFomPlaylist(false), refreshing(false) {
+mPlaylistDir(mMainDir / "Playlists"), selectedPlaylist(-1), selectedIndex(-1), mPlayOrderIndex(0), mShuffleEnabled(false), isPlayingFomPlaylist(false), refreshing(false) {
 	utils::createDirectory(mMainDir);
 	utils::createDirectory(mMusicDir);
 	utils::createDirectory(mPlaylistDir);
@@ -40,7 +42,10 @@ mPlaylistDir(mMainDir / "Playlists"), selectedPlaylist(-1), selectedIndex(-1), i
 		}
 
 		mPlaylists.push_back(currentPlaylist);
+		currentPlaylist.buildPlayOrder(currentPlaylist.shuffleEnabled);
 	}
+
+	buildPlayOrder(mShuffleEnabled);
 }
 
 bool LibraryManager::import() {
@@ -104,12 +109,41 @@ bool LibraryManager::erase(const fs::path& song) {
 	return false;
 }
 
+void LibraryManager::buildPlayOrder(bool shuffle) {
+	mPlayOrder.resize(mSongs.size());
+	std::iota(mPlayOrder.begin(), mPlayOrder.end(), 0);
+
+	if (shuffle) {
+		const int currentSongIndex = getCurrentSongIndex();
+
+		std::random_device rd;
+		std::mt19937 g(rd());
+		std::shuffle(mPlayOrder.begin(), mPlayOrder.end(), g);
+
+		if (currentSongIndex >= 0) {
+			const auto it = std::find(mPlayOrder.begin(), mPlayOrder.end(), currentSongIndex);
+			if (it != mPlayOrder.end()) {
+				std::iter_swap(it, mPlayOrder.begin() + mPlayOrderIndex);
+			}
+		}
+	}
+	else {
+		const int currentSongIndex = getCurrentSongIndex();
+		if (currentSongIndex >= 0) mPlayOrderIndex = currentSongIndex;
+	}
+}
+
 const fs::path& LibraryManager::getMainDir() {
 	return mMainDir;
 }
 
 const fs::path& LibraryManager::getMusicDir() {
 	return mMusicDir;
+}
+
+const int LibraryManager::getCurrentSongIndex() const {
+	if (mPlayOrderIndex < 0 || mPlayOrderIndex >= mPlayOrder.size()) return -1;
+	return mPlayOrder[mPlayOrderIndex];
 }
 
 bool LibraryManager::createPlaylist(const std::string& playlist) {
@@ -158,6 +192,7 @@ void LibraryManager::addSongToPlaylist(Playlist& playlist, const fs::path& songP
 	if (file.is_open()) {
 		file << utils::toUtf8(songPath) << '\n';
 		playlist.songs.push_back(songPath);
+		playlist.buildPlayOrder(playlist.shuffleEnabled);
 	}
 	else {
 		std::println("Failed to open playlist for appending: {}", filepath.string());
@@ -170,6 +205,7 @@ bool LibraryManager::removeSongFromPlaylist(Playlist& playlist, int songIndex) c
 	if (songIndex < 0 || songIndex >= static_cast<int>(playlist.songs.size())) return false;
 
 	playlist.songs.erase(playlist.songs.begin() + songIndex);
+	playlist.buildPlayOrder(playlist.shuffleEnabled);
 
 	const fs::path filepath = mPlaylistDir / (playlist.name + ".plst");
 	std::ofstream file(filepath, std::ios::trunc);
@@ -194,8 +230,22 @@ bool LibraryManager::isSongInPlaylist(const fs::path& targetPath, const Playlist
 	return false;
 }
 
+void LibraryManager::setPlaylistsShuffle(bool shuffle) {
+	if (mPlaylists.empty()) return;
+	for (Playlist& p : mPlaylists) {
+		p.shuffleEnabled = shuffle;
+		p.buildPlayOrder(p.shuffleEnabled);
+	}
+}
+
 void LibraryManager::refreshSongs() {
 	refreshing = true;
+
+	const int currentIndex = getCurrentSongIndex();
+	const fs::path currentPath = (currentIndex >= 0 && currentIndex < static_cast<int>(mSongs.size()))
+		? mSongs[currentIndex]
+		: fs::path();
+
 	mSongs.clear();
 
 	for (const auto& entry : fs::directory_iterator(mMusicDir)) {
@@ -206,5 +256,44 @@ void LibraryManager::refreshSongs() {
 			mSongs.push_back(p);
 		}
 	}
+
+	buildPlayOrder(mShuffleEnabled);
+
+	if (!currentPath.empty()) {
+		const auto it = std::find(mSongs.begin(), mSongs.end(), currentPath);
+		if (it != mSongs.end()) {
+			const int newSongIndex = static_cast<int>(std::distance(mSongs.begin(), it));
+			const auto orderIt = std::find(mPlayOrder.begin(), mPlayOrder.end(), newSongIndex);
+			if (orderIt != mPlayOrder.end()) {
+				mPlayOrderIndex = static_cast<int>(std::distance(mPlayOrder.begin(), orderIt));
+			}
+		}
+	}
+
 	refreshing = false;
+}
+
+void Playlist::buildPlayOrder(bool shuffle) {
+	playOrder.resize(songs.size());
+	std::iota(playOrder.begin(), playOrder.end(), 0);
+	if (shuffle) {
+		const int current = (playOrderIndex >= 0 && playOrderIndex < static_cast<int>(playOrder.size()))
+			? playOrder[playOrderIndex] : -1;
+		std::random_device rd;
+		std::mt19937 g(rd());
+		std::shuffle(playOrder.begin(), playOrder.end(), g);
+		if (current >= 0) {
+			auto it = std::find(playOrder.begin(), playOrder.end(), current);
+			if (it != playOrder.end())
+				std::iter_swap(it, playOrder.begin() + playOrderIndex);
+		}
+	}
+	else {
+		if (selectedIndex >= 0) playOrderIndex = selectedIndex;
+	}
+}
+
+const int Playlist::getCurrentSongIndex() const {
+	if (playOrderIndex < 0 || playOrderIndex >= static_cast<int>(playOrder.size())) return -1;
+	return playOrder[playOrderIndex];
 }

@@ -218,8 +218,11 @@ int main() {
 
 		ImGui::SetCursorPos(ImVec2(prevButCurPos.x - 32.0f, prevButCurPos.y + 20.0f));
 		if (ImGui::ImageButton("ShuffleButton", ImTextureRef((ImTextureID)state.shuffleIcon), ImVec2(24.0f, 24.0f))) {
-
+			manager.mShuffleEnabled = !manager.mShuffleEnabled;
+			manager.buildPlayOrder(manager.mShuffleEnabled);
+			manager.setPlaylistsShuffle(manager.mShuffleEnabled);
 		}
+
 		ImGui::SameLine();
 
 		// Repeat Button

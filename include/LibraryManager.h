@@ -10,8 +10,14 @@ struct Playlist {
 	fs::path filePath;
 	std::vector<fs::path> songs;
 	int selectedIndex = -1;
+	std::vector<int> playOrder;
+	int playOrderIndex = 0;
+	bool shuffleEnabled = false;
 
 	bool operator==(const Playlist& other) { return filePath == other.filePath; }
+
+	void buildPlayOrder(bool shuffle);
+	const int getCurrentSongIndex() const;
 };
 
 class LibraryManager {
@@ -20,20 +26,26 @@ public:
 
 	std::vector<fs::path> mSongs;
 	std::vector<Playlist> mPlaylists;
+	std::vector<int> mPlayOrder;
 	int selectedPlaylist;
 	int selectedIndex;
+	int mPlayOrderIndex;
+	bool mShuffleEnabled;
 	bool isPlayingFomPlaylist;
 	bool refreshing;
 	bool import();
 	bool erase(const fs::path& song);
+	void buildPlayOrder(bool shuffle);
 	const fs::path& getMainDir();
 	const fs::path& getMusicDir();
+	const int getCurrentSongIndex() const;
 
 	bool createPlaylist(const std::string& playlist);
 	bool removePlaylist(Playlist& playlist);
 	void addSongToPlaylist(Playlist& playlist, const fs::path& songPath) const;
 	bool removeSongFromPlaylist(Playlist& playlist, int songIndex) const;
 	bool isSongInPlaylist(const fs::path& targetPath, const Playlist& playlist);
+	void setPlaylistsShuffle(bool shuffle);
 
 	void refreshSongs();
 

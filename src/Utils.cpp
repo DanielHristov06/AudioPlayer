@@ -32,27 +32,18 @@ namespace utils {
 		}
 
 		if (!manager.isPlayingFomPlaylist) {
-			if (manager.selectedIndex < 0) {
-				manager.selectedIndex = 0;
-			}
-			else {
-				manager.selectedIndex = (manager.selectedIndex + 1) % static_cast<int>(manager.mSongs.size());
-			}
-
-			player.play(manager.mSongs[manager.selectedIndex]);
-			state.currentlyPlayingPath = manager.mSongs[manager.selectedIndex];
+			manager.mPlayOrderIndex = (manager.mPlayOrderIndex + 1) % static_cast<int>(manager.mPlayOrder.size());
+			manager.selectedIndex = manager.getCurrentSongIndex();
+			const fs::path& song = manager.mSongs[manager.selectedIndex];
+			player.play(song);
+			state.currentlyPlayingPath = song;
 		}
 		else {
 			Playlist& currPlaylist = manager.mPlaylists[manager.selectedPlaylist];
 			if (currPlaylist.songs.empty()) return;
 
-			if (currPlaylist.selectedIndex < 0) {
-				currPlaylist.selectedIndex = 0;
-			}
-			else {
-				currPlaylist.selectedIndex = (currPlaylist.selectedIndex + 1) % static_cast<int>(currPlaylist.songs.size());
-			}
-
+			currPlaylist.playOrderIndex = (currPlaylist.playOrderIndex + 1) % static_cast<int>(currPlaylist.playOrder.size());
+			currPlaylist.selectedIndex = currPlaylist.getCurrentSongIndex();
 			player.play(currPlaylist.songs[currPlaylist.selectedIndex]);
 			state.currentlyPlayingPath = currPlaylist.songs[currPlaylist.selectedIndex];
 		}
@@ -62,29 +53,21 @@ namespace utils {
 		if (manager.mSongs.empty()) return;
 
 		if (!manager.isPlayingFomPlaylist) {
-			if (manager.selectedIndex < 0) {
-				manager.selectedIndex = static_cast<int>(manager.mSongs.size() - 1);
-			}
-			else {
-				const int size = static_cast<int>(manager.mSongs.size());
-				manager.selectedIndex = (manager.selectedIndex - 1 + size) % size;
-			}
+			const int size = static_cast<int>(manager.mPlayOrder.size());
+			manager.mPlayOrderIndex = (manager.mPlayOrderIndex - 1 + size) % size;
+			manager.selectedIndex = manager.getCurrentSongIndex();
 
-			player.play(manager.mSongs[manager.selectedIndex]);
-			state.currentlyPlayingPath = manager.mSongs[manager.selectedIndex];
+			const fs::path& song = manager.mSongs[manager.selectedIndex];
+			player.play(song);
+			state.currentlyPlayingPath = song;
 		}
 		else {
 			Playlist& currPlaylist = manager.mPlaylists[manager.selectedPlaylist];
 			if (currPlaylist.songs.empty()) return;
 
-			if (currPlaylist.selectedIndex < 0) {
-				currPlaylist.selectedIndex = static_cast<int>(currPlaylist.songs.size() - 1);
-			}
-			else {
-				const int size = static_cast<int>(currPlaylist.songs.size());
-				currPlaylist.selectedIndex = (currPlaylist.selectedIndex - 1 + size) % size;
-			}
-
+			const int size = static_cast<int>(currPlaylist.playOrder.size());
+			currPlaylist.playOrderIndex = (currPlaylist.playOrderIndex - 1 + size) % size;
+			currPlaylist.selectedIndex = currPlaylist.getCurrentSongIndex();
 			player.play(currPlaylist.songs[currPlaylist.selectedIndex]);
 			state.currentlyPlayingPath = currPlaylist.songs[currPlaylist.selectedIndex];
 		}
@@ -112,7 +95,7 @@ namespace utils {
 			fs::create_directories(dir, ec);
 
 			if (ec) {
-				std::println("Failed to create directory {} : {}", dir.string(), ec.message());
+				std::println("Failed to create directory {} : {}\n", dir.string(), ec.message());
 			}
 		}
 		else if (!fs::is_directory(dir)) {
