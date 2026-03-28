@@ -50,7 +50,7 @@ public:
 	void refreshSongs();
 
 private:
-	const char* mFilters[3] = { "*.mp3", "*.wav", "*.ogg" };
+	const char* mFilters[4] = { "*.mp3", "*.wav", "*.ogg", "*.flac" };
 	fs::path mMainDir{};
 	fs::path mMusicDir{};
 	fs::path mPlaylistDir{};

@@ -18,7 +18,7 @@ mPlaylistDir(mMainDir / "Playlists"), selectedPlaylist(-1), selectedIndex(-1), m
 		const fs::path p(entry);
 		const std::string ext = reinterpret_cast<const char*>(p.extension().u8string().c_str());
 
-		if (ext == ".mp3" || ext == ".wav" || ext == ".ogg") {
+		if (ext == ".mp3" || ext == ".wav" || ext == ".ogg" || ext == ".flac") {
 			mSongs.push_back(p);
 		}
 	}
@@ -41,15 +41,15 @@ mPlaylistDir(mMainDir / "Playlists"), selectedPlaylist(-1), selectedIndex(-1), m
 			}
 		}
 
-		mPlaylists.push_back(currentPlaylist);
 		currentPlaylist.buildPlayOrder(currentPlaylist.shuffleEnabled);
+		mPlaylists.push_back(currentPlaylist);
 	}
 
 	buildPlayOrder(mShuffleEnabled);
 }
 
 bool LibraryManager::import() {
-	const char* fp = tinyfd_openFileDialog("Select an audio file", "", 3, mFilters, "Audio files", 1);
+	const char* fp = tinyfd_openFileDialog("Select an audio file", "", 4, mFilters, "Audio files", 1);
 	
 	if (!fp) {
 		std::println("Cannot load this file.\n");
@@ -252,7 +252,7 @@ void LibraryManager::refreshSongs() {
 		const fs::path p(entry);
 		const std::string ext = reinterpret_cast<const char*>(p.extension().u8string().c_str());
 
-		if (ext == ".mp3" || ext == ".wav" || ext == ".ogg") {
+		if (ext == ".mp3" || ext == ".wav" || ext == ".ogg" || ext == ".flac") {
 			mSongs.push_back(p);
 		}
 	}
