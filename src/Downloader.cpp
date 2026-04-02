@@ -80,8 +80,8 @@ Downloader::DownloadStatus Downloader::getDownloadStatus() {
 #else
 	if (mProcessId < 0) return DownloadStatus::Idle;
 	int status;
-	const pid_t resilt = waitpid(mProcessId, &status, WNOHANG);
-	if (resilt == 0) {
+	const pid_t result = waitpid(mProcessId, &status, WNOHANG);
+	if (result == 0) {
 		return DownloadStatus::Downloading;
 	}
 	mProcessId = -1;
