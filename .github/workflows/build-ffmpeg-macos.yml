@@ -49,6 +49,7 @@ jobs:
           tar -xzf libvorbis.tar.gz
           cd libvorbis-1.3.7
           export FFMPEG_DEPS="$GITHUB_WORKSPACE/ffmpeg_deps"
+          export PKG_CONFIG_PATH="$FFMPEG_DEPS/lib/pkgconfig"
           ./configure \
             --prefix="$FFMPEG_DEPS" \
             --disable-shared \
