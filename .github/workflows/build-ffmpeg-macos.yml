@@ -50,14 +50,16 @@ jobs:
           cd libvorbis-1.3.7
           export FFMPEG_DEPS="$GITHUB_WORKSPACE/ffmpeg_deps"
           export PKG_CONFIG_PATH="$FFMPEG_DEPS/lib/pkgconfig"
-          sed -i '' 's/-force_cpusubtype_ALL//g' ltmain.sh
           ./configure \
             --prefix="$FFMPEG_DEPS" \
             --disable-shared \
             --enable-static \
-            --with-ogg="$FFMPEG_DEPS"
-          make -j"$(sysctl -n hw.logicalcpu)"
-          make install
+            --with-ogg="$FFMPEG_DEPS" \
+            --disable-examples \
+            --disable-docs
+          make -j"$(sysctl -n hw.logicalcpu)" -C lib
+          make -C lib install
+          make -C include install
 
       - name: Configure
         working-directory: ffmpeg
