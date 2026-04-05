@@ -11,7 +11,7 @@ set(VENDORS_DIR "${CMAKE_SOURCE_DIR}/vendors")
 file(GLOB AUDIOPLAYER_SOURCES "${SRC_DIR}/*.cpp" "${VENDORS_DIR}/glad/src/glad.c")
 
 add_library(miniaudio STATIC "${VENDORS_DIR}/miniaudio/miniaudio.c")
-target_include_directories(miniaudio PRIVATE "${VENDORS_DIR}/miniaudio")
+target_include_directories(miniaudio PRIVATE "${VENDORS_DIR}/miniaudio" "${VENDORS_DIR}/miniaudio/extras")
 
 add_library(tinyfiledialogs STATIC "${VENDORS_DIR}/tinyfiledialogs/tinyfiledialogs.c")
 target_include_directories(tinyfiledialogs PRIVATE "${VENDORS_DIR}/tinyfiledialogs")

@@ -500,7 +500,8 @@ int main() {
 			ImGui::SameLine();
 
 			if (ImGui::Button("Download")) {
-				downloader.download(state.url, manager.getMusicDir());
+				std::string format = std::string(state.formats[state.selectedFormat]).substr(1);
+				downloader.download(state.url, manager.getMusicDir(), format);
 				state.url[0] = '\0';
 			}
 

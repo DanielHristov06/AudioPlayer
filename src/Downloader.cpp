@@ -10,13 +10,15 @@ Downloader::Downloader() : mMainDir(utils::getBasePath() / "AudioPlayer"), mYtDl
 	extractYtDlp();
 }
 
-bool Downloader::download(const std::string& url, const fs::path& musicDir) {
+bool Downloader::download(const std::string& url, const fs::path& musicDir, const std::string& format) {
 	if (getDownloadStatus() == DownloadStatus::Downloading) return false;
 
 	const std::string outputTemplate = (musicDir / "%(title)s.%(ext)s").string();
 
 #if defined(_WIN32)
-	std::string cmd = "\"" + mYtDlpPath.string() + "\" -x --audio-format mp3 --audio-quality 0 --windows-filenames -o \"" + outputTemplate + "\" " + url;
+	std::string ytDlpFormat = format;
+	if (format == "ogg") ytDlpFormat = "vorbis";
+	std::string cmd = "\"" + mYtDlpPath.string() + "\" -x --audio-format " + ytDlpFormat + " --audio-quality 0 --windows-filenames -o \"" + outputTemplate + "\" " + url;
 	std::wstring wCmd = toWide(cmd);
 
 	STARTUPINFOW si{};
@@ -47,8 +49,10 @@ bool Downloader::download(const std::string& url, const fs::path& musicDir) {
 	}
 
 	if (pid == 0) {
+		std::string ytDlpFormat = format;
+		if (format == "ogg") ytDlpFormat = "vorbis";
 		execl(mYtDlpPath.c_str(),
-			"yt-dlp", "-x", "--audio-format", "mp3", "--audio-quality", "0", "--windows-filenames", "--ffmpeg-location", mYtDlpDir.c_str(), "-o",
+			"yt-dlp", "-x", "--audio-format", ytDlpFormat.c_str(), "--audio-quality", "0", "--windows-filenames", "--ffmpeg-location", mYtDlpDir.c_str(), "-o",
 			outputTemplate.c_str(), url.c_str(), nullptr);
 		std::println("execl(), failed - ut - dlp could not be launcehd\n");
 		_exit(1);

@@ -14,7 +14,12 @@ mPlaylistDir(mMainDir / "Playlists"), selectedPlaylist(-1), selectedIndex(-1), m
 	utils::createDirectory(mMusicDir);
 	utils::createDirectory(mPlaylistDir);
 
-	for (const auto& entry : fs::directory_iterator(mMusicDir)) {
+	std::error_code ec;
+	for (const auto& entry : fs::directory_iterator(mMusicDir, ec)) {
+		if (ec) {
+			std::println("Error while iterating through the music directory: {}", ec.message());
+			break;
+		}
 		const fs::path p(entry);
 		const std::string ext = utils::toUtf8(p.extension());
 
@@ -23,7 +28,11 @@ mPlaylistDir(mMainDir / "Playlists"), selectedPlaylist(-1), selectedIndex(-1), m
 		}
 	}
 
-	for (const auto& entry : fs::directory_iterator(mPlaylistDir)) {
+	for (const auto& entry : fs::directory_iterator(mPlaylistDir, ec)) {
+		if (ec) {
+			std::println("Error while iterating through the playlist directory: {}", ec.message());
+			break;
+		}
 		std::ifstream file(entry.path());
 		if (!file.is_open()) continue;
 		std::string line;

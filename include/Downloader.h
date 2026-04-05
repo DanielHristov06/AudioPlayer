@@ -19,7 +19,7 @@ public:
 	Downloader();
 
 	enum class DownloadStatus { Idle, Downloading, Success, Failed };
-	bool download(const std::string& url, const fs::path& musicDir);
+	bool download(const std::string& url, const fs::path& musicDir, const std::string& format);
 	DownloadStatus getDownloadStatus();
 	bool isReady() const;
 

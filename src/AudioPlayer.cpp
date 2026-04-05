@@ -29,11 +29,24 @@ bool AudioPlayer::play(const std::filesystem::path& path) {
 		mHasSound = false;
 	}
 
+	ma_result initResult;
+	try {
 #if defined(_WIN32)
-	if (ma_sound_init_from_file_w(&mEngine, path.c_str(), NULL, NULL, NULL, &mCurrentSound) != MA_SUCCESS) {
+		initResult = ma_sound_init_from_file_w(&mEngine, path.c_str(), MA_SOUND_FLAG_DECODE, NULL, NULL, &mCurrentSound);
 #else
-	if (ma_sound_init_from_file(&mEngine, path.c_str(), NULL, NULL, NULL, &mCurrentSound) != MA_SUCCESS) {
+		initResult = ma_sound_init_from_file(&mEngine, path.c_str(), MA_SOUND_FLAG_DECODE, NULL, NULL, &mCurrentSound);
 #endif
+	}
+	catch (const std::exception& e) {
+		std::println("Exception while loading sound from {}: {}\n", path.string(), e.what());
+		return false;
+	}
+	catch (...) {
+		std::println("Unknown exception while loading sound from: {}\n", path.string());
+		return false;
+	}
+
+	if (initResult != MA_SUCCESS) {
 		std::println("Failed to load sound from: {}\n", path.string());
 		return false;
 	}
