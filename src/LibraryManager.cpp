@@ -16,7 +16,7 @@ mPlaylistDir(mMainDir / "Playlists"), selectedPlaylist(-1), selectedIndex(-1), m
 
 	for (const auto& entry : fs::directory_iterator(mMusicDir)) {
 		const fs::path p(entry);
-		const std::string ext = reinterpret_cast<const char*>(p.extension().u8string().c_str());
+		const std::string ext = utils::toUtf8(p.extension());
 
 		if (ext == ".mp3" || ext == ".wav" || ext == ".ogg" || ext == ".flac") {
 			mSongs.push_back(p);
@@ -215,7 +215,7 @@ bool LibraryManager::removeSongFromPlaylist(Playlist& playlist, int songIndex) c
 
 	file << "Name: " << playlist.name << '\n';
 	for (const fs::path& song : playlist.songs) {
-		file << song.string() << '\n';
+		file << utils::toUtf8(song) << '\n';
 	}
 
 	file.close();
