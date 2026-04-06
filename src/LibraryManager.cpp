@@ -8,8 +8,7 @@
 #include <numeric>
 #include <random>
 
-LibraryManager::LibraryManager() : mMainDir(utils::getBasePath() / "AudioPlayer"), mMusicDir(mMainDir / "Music"),
-mPlaylistDir(mMainDir / "Playlists"), selectedPlaylist(-1), selectedIndex(-1), mPlayOrderIndex(0), mShuffleEnabled(false), isPlayingFomPlaylist(false), refreshing(false) {
+LibraryManager::LibraryManager() : mMainDir(utils::getBasePath() / "AudioPlayer"), mMusicDir(mMainDir / "Music"), mPlaylistDir(mMainDir / "Playlists") {
 	utils::createDirectory(mMainDir);
 	utils::createDirectory(mMusicDir);
 	utils::createDirectory(mPlaylistDir);

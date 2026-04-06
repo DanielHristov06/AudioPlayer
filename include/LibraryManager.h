@@ -27,12 +27,12 @@ public:
 	std::vector<fs::path> mSongs;
 	std::vector<Playlist> mPlaylists;
 	std::vector<int> mPlayOrder;
-	int selectedPlaylist;
-	int selectedIndex;
-	int mPlayOrderIndex;
-	bool mShuffleEnabled;
-	bool isPlayingFomPlaylist;
-	bool refreshing;
+	int selectedPlaylist = -1;
+	int selectedIndex = -1;
+	int mPlayOrderIndex = 0;
+	bool mShuffleEnabled = false;
+	bool isPlayingFomPlaylist = false;
+	bool refreshing = false;
 	bool import();
 	bool erase(const fs::path& song);
 	void buildPlayOrder(bool shuffle);

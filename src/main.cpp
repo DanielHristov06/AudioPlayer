@@ -240,7 +240,9 @@ int main() {
 		double current = player.getCurrentTime();
 		double total = player.getTotalTime();
 		float progress = (total > 0.0f) ? float(current / total) : 0.0f;
-		const std::string leftTime = utils::formatTime(current);
+		if (state.isSeeking) progress = state.seekPreview;
+		const double displayTime = state.isSeeking ? (state.seekPreview * total) : current;
+		const std::string leftTime = utils::formatTime(displayTime);
 		const std::string rightTime = utils::formatTime(total);
 
 		const float textWidth = ImGui::CalcTextSize("0:00").x;
@@ -256,10 +258,18 @@ int main() {
 
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, -1.0f));
 		ImGui::PushItemWidth(barWidth);
-		if (ImGui::SliderFloat("##SongBar", &progress, 0.0f, 1.0f, "")) {
-			const double newTime = progress * total;
-			player.seek(newTime);
+
+		ImGui::SliderFloat("##SongBar", &progress, 0.0f, 1.0f, "");
+
+		if (ImGui::IsItemActive()) {
+			state.isSeeking = true;
+			state.seekPreview = progress;
 		}
+		if (ImGui::IsItemDeactivatedAfterEdit()) {
+			player.seek(state.seekPreview* total);
+			state.isSeeking = false;
+		}
+
 		ImGui::PopStyleVar();
 		ImGui::PopItemWidth();
 		ImGui::SameLine();

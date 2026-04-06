@@ -23,6 +23,8 @@ namespace utils {
 
 		// Player State
 		float volume = 1.0f;
+		float seekPreview = 0.0f;
+		bool isSeeking = false;
 
 		// Playlist Window
 		bool playlistWindowOpen = false;
