@@ -44,5 +44,8 @@ namespace utils {
 	void createDirectory(const fs::path& dir);
 	void openInExplorer(const fs::path& path);
 
+	void renderSongSelectable(const fs::path& song, LibraryManager::PlayingMode playingMode, int index, int playlistIndex,
+		const std::string& labelSuffix, const char* popupName, UIState& state, LibraryManager& manager, AudioPlayer& player);
+
 	std::string toUtf8(const fs::path& path);
 }

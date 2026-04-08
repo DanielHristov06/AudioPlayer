@@ -24,21 +24,31 @@ class LibraryManager {
 public:
 	LibraryManager();
 
+	enum class PlayingMode { None, Queue, Playlist };
+	PlayingMode playingMode = PlayingMode::None;
+
 	std::vector<fs::path> mSongs;
 	std::vector<Playlist> mPlaylists;
+	std::vector<fs::path> mQueue;
 	std::vector<int> mPlayOrder;
+
 	int selectedPlaylist = -1;
 	int selectedIndex = -1;
 	int mPlayOrderIndex = 0;
 	bool mShuffleEnabled = false;
 	bool isPlayingFomPlaylist = false;
 	bool refreshing = false;
+
 	bool import();
 	bool erase(const fs::path& song);
 	void buildPlayOrder(bool shuffle);
 	const fs::path& getMainDir();
 	const fs::path& getMusicDir();
 	const int getCurrentSongIndex() const;
+
+	void addSongToQueue(const fs::path& songPath);
+	bool removeSongFromQueue(const fs::path& song);
+	bool isSongInQueue(const fs::path path);
 
 	bool createPlaylist(const std::string& playlist);
 	bool removePlaylist(Playlist& playlist);

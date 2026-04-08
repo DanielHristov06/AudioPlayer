@@ -28,7 +28,7 @@ int main() {
 #if __APPLE__
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
-	
+
 	GLFWwindow* window = glfwCreateWindow(1280, 720, "Audio Player", NULL, NULL);
 	if (!window) {
 		std::println("Failed to create a window.\n");
@@ -40,7 +40,7 @@ int main() {
 
 	glfwSetFramebufferSizeCallback(window, [](GLFWwindow* window, int width, int height) {
 		glViewport(0, 0, width, height);
-	});
+		});
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		std::println("Could not initialize GLAD.\n");
@@ -131,7 +131,7 @@ int main() {
 			ImGui::EndMenuBar();
 
 			const ImGuiID dockspaceId = ImGui::GetID("Dockspace");
-			
+
 			static bool firstTime = true;
 			if (firstTime) {
 				firstTime = false;
@@ -147,8 +147,10 @@ int main() {
 				ImGui::DockBuilderSplitNode(dockMain, ImGuiDir_Left, 0.20f, &dockLeft, &dockMain);
 				ImGui::DockBuilderGetNode(dockBottom)->LocalFlags |= ImGuiDockNodeFlags_NoTabBar;
 				ImGui::DockBuilderGetNode(dockLeft)->LocalFlags |= ImGuiDockNodeFlags_NoTabBar;
+				ImGui::DockBuilderGetNode(dockMain)->LocalFlags |= ImGuiDockNodeFlags_NoTabBar;
 				ImGui::DockBuilderDockWindow("Player", dockBottom);
 				ImGui::DockBuilderDockWindow("Songs", dockLeft);
+				ImGui::DockBuilderDockWindow("Queue", dockMain);
 				ImGui::DockBuilderFinish(dockspaceId);
 			}
 
@@ -157,18 +159,74 @@ int main() {
 			ImGui::End();
 		}
 
+		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.08f, 0.08f, 0.08f, 1.0f));
+		ImGui::Begin("Queue");
+
+		ImGui::Text("Queue:");
+
+		ImGui::Spacing();
+		ImGui::Separator();
+		ImGui::Spacing();
+
+		if (!manager.mQueue.empty()) {
+			for (size_t i = 0; i < manager.mQueue.size(); i++) {
+				const auto& song = manager.mQueue[i];
+				utils::renderSongSelectable(song, LibraryManager::PlayingMode::Queue, i, -1, "##queue_" + std::to_string(i), "QueueSongContextMenu", state, manager, player);
+			}
+
+			if (ImGui::BeginPopup("QueueSongContextMenu")) {
+				const fs::path& popupSong = manager.mQueue[state.popupIndex];
+
+				if (ImGui::MenuItem("Play")) {
+					player.play(popupSong);
+					state.currentlyPlayingPath = popupSong;
+					ImGui::CloseCurrentPopup();
+				}
+
+				if (ImGui::MenuItem("Remove from queue")) {
+					manager.removeSongFromQueue(popupSong);
+					ImGui::CloseCurrentPopup();
+				}
+
+				ImGui::Separator();
+
+				if (ImGui::BeginMenu("Add to playlist")) {
+					for (auto& playlist : manager.mPlaylists) {
+						const bool alreadyIn = manager.isSongInPlaylist(popupSong, playlist);
+						if (ImGui::MenuItem(playlist.name.c_str(), nullptr, false, !alreadyIn)) {
+							manager.addSongToPlaylist(playlist, popupSong);
+						}
+					}
+
+					ImGui::EndMenu();
+				}
+
+				ImGui::EndPopup();
+			}
+		}
+
+		ImGui::End();
+		ImGui::PopStyleColor();
+
 		ImGui::Begin("Player");
 		const float curPos = ImGui::GetCursorPosX();
 
 		// Song Name
 		if (manager.selectedIndex >= 0 || manager.selectedPlaylist >= 0) {
-			if (!manager.isPlayingFomPlaylist) {
+			switch (manager.playingMode)
+			{
+			case LibraryManager::PlayingMode::None:
 				ImGui::Text("%s", utils::toUtf8(manager.mSongs[manager.selectedIndex].stem()).c_str());
-			}
-			else {
-				Playlist selectedPlaylist = manager.mPlaylists[manager.selectedPlaylist];
+				break;
+			case LibraryManager::PlayingMode::Queue:
+				ImGui::Text("%s", utils::toUtf8(manager.mQueue[manager.selectedIndex].stem()).c_str());
+				break;
+			case LibraryManager::PlayingMode::Playlist:
+				const Playlist& selectedPlaylist = manager.mPlaylists[manager.selectedPlaylist];
 				ImGui::Text("%s", utils::toUtf8(selectedPlaylist.songs[selectedPlaylist.selectedIndex].stem()).c_str());
+				break;
 			}
+
 			ImGui::SameLine();
 			ImGui::SetCursorPosX(curPos);
 		}
@@ -266,7 +324,7 @@ int main() {
 			state.seekPreview = progress;
 		}
 		if (ImGui::IsItemDeactivatedAfterEdit()) {
-			player.seek(state.seekPreview* total);
+			player.seek(state.seekPreview * total);
 			state.isSeeking = false;
 		}
 
@@ -310,31 +368,11 @@ int main() {
 		ImGui::Dummy(ImVec2(0.0f, 4.0f));
 		ImGui::Separator();
 		ImGui::Dummy(ImVec2(0.0f, 4.0f));
-		
+
 		if (ImGui::CollapsingHeader("All Songs")) {
 			for (int i = 0; i < static_cast<int>(manager.mSongs.size()); i++) {
 				const auto& song = manager.mSongs[i];
-
-				const std::string mainLabel = utils::toUtf8(song.stem()) + "##main_" + std::to_string(i);
-				if (ImGui::Selectable(mainLabel.c_str(), song == state.currentlyPlayingPath)) {
-					manager.selectedIndex = i;
-					manager.isPlayingFomPlaylist = false;
-					if (manager.selectedPlaylist != -1) {
-						manager.mPlaylists[manager.selectedPlaylist].selectedIndex = -1;
-						manager.selectedPlaylist = -1;
-					}
-					if (song != state.currentlyPlayingPath) {
-						player.play(song);
-						state.currentlyPlayingPath = song;
-						state.repeatUsed = false;
-					}
-				}
-
-				if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
-					ImGui::OpenPopup("SongContextMenu");
-					state.popupIndex = i;
-					state.popupPlaylistIndex = -1;
-				}
+				utils::renderSongSelectable(song, LibraryManager::PlayingMode::None, i, -1, "##main_" + std::to_string(i), "SongContextMenu", state, manager, player);
 			}
 		}
 
@@ -350,209 +388,195 @@ int main() {
 			if (headerOpen) {
 				for (int i = 0; i < static_cast<int>(playlist.songs.size()); i++) {
 					const auto& song = playlist.songs[i];
+					utils::renderSongSelectable(song, LibraryManager::PlayingMode::Playlist, i, p, "##pl_" + std::to_string(p) + "_" + std::to_string(i), "SongContextMenu", state, manager, player);
+				}
 
-					const std::string plLabel = utils::toUtf8(song.stem()) + "##pl_" + std::to_string(p) + "_" + std::to_string(i);
-					if (ImGui::Selectable(plLabel.c_str(), song == state.currentlyPlayingPath)) {
-						manager.selectedIndex = -1;
-						manager.isPlayingFomPlaylist = true;
-						manager.selectedPlaylist = p;
-						playlist.selectedIndex = i;
-						if (song != state.currentlyPlayingPath) {
-							player.play(song);
-							state.currentlyPlayingPath = song;
-							state.repeatUsed = false;
+				if (headerHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
+					ImGui::OpenPopup("PlaylistContextMenu");
+					state.popupPlaylistIndex = p;
+				}
+			}
+		}
+
+			if (ImGui::BeginPopup("SongContextMenu")) {
+				const fs::path& popupSong = (state.popupPlaylistIndex == -1)
+					? manager.mSongs[state.popupIndex] : manager.mPlaylists[state.popupPlaylistIndex].songs[state.popupIndex];
+
+				if (ImGui::MenuItem("Play")) {
+					player.play(popupSong);
+					state.currentlyPlayingPath = popupSong;
+					ImGui::CloseCurrentPopup();
+				}
+
+				if (state.popupPlaylistIndex == -1) {
+					if (ImGui::MenuItem("Delete")) {
+						manager.erase(manager.mSongs[state.popupIndex]);
+						ImGui::CloseCurrentPopup();
+					}
+				}
+				else {
+					if (ImGui::MenuItem("Remove from playlist")) {
+						manager.removeSongFromPlaylist(manager.mPlaylists[state.popupPlaylistIndex], state.popupIndex);
+						ImGui::CloseCurrentPopup();
+					}
+				}
+
+				ImGui::Separator();
+
+				if (ImGui::MenuItem("Add to queue")) {
+					manager.addSongToQueue(popupSong);
+				}
+
+				if (ImGui::BeginMenu("Add to playlist")) {
+					for (auto& playlist : manager.mPlaylists) {
+						const bool alreadyIn = manager.isSongInPlaylist(popupSong, playlist);
+						if (ImGui::MenuItem(playlist.name.c_str(), nullptr, false, !alreadyIn)) {
+							manager.addSongToPlaylist(playlist, popupSong);
 						}
 					}
 
-					if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
-						ImGui::OpenPopup("SongContextMenu");
-						state.popupIndex = i;
-						state.popupPlaylistIndex = p;
-					}
+					ImGui::EndMenu();
 				}
+				ImGui::EndPopup();
 			}
 
-			if (headerHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
-				ImGui::OpenPopup("PlaylistContextMenu");
-				state.popupPlaylistIndex = p;
-			}
-		}
-
-		if (ImGui::BeginPopup("SongContextMenu")) {
-			const fs::path& popupSong = (state.popupPlaylistIndex == -1)
-				? manager.mSongs[state.popupIndex] : manager.mPlaylists[state.popupPlaylistIndex].songs[state.popupIndex];
-
-			if (ImGui::MenuItem("Play")) {
-				player.play(popupSong);
-				state.currentlyPlayingPath = popupSong;
-				ImGui::CloseCurrentPopup();
-			}
-
-			if (state.popupPlaylistIndex == -1) {
-				if (ImGui::MenuItem("Delete")) {
-					manager.erase(manager.mSongs[state.popupIndex]);
+			if (ImGui::BeginPopup("PlaylistContextMenu")) {
+				if (ImGui::MenuItem("Delete playlist")) {
+					manager.removePlaylist(manager.mPlaylists[state.popupPlaylistIndex]);
 					ImGui::CloseCurrentPopup();
 				}
-			}
-			else {
-				if (ImGui::MenuItem("Remove from playlist")) {
-					manager.removeSongFromPlaylist(manager.mPlaylists[state.popupPlaylistIndex], state.popupIndex);
-					ImGui::CloseCurrentPopup();
-				}
+
+				ImGui::EndPopup();
 			}
 
-			ImGui::Separator();
-			
-			if (ImGui::BeginMenu("Add to playlist")) {
-				for (auto& playlist : manager.mPlaylists) {
-					const bool alreadyIn = manager.isSongInPlaylist(popupSong, playlist);
-					if (ImGui::MenuItem(playlist.name.c_str(), nullptr, false, !alreadyIn)) {
-						manager.addSongToPlaylist(playlist, popupSong);
-					}
-				}
-
-				ImGui::EndMenu();
-			}
-			ImGui::EndPopup();
-		}
-
-		if (ImGui::BeginPopup("PlaylistContextMenu")) {
-			if (ImGui::MenuItem("Delete playlist")) {
-				manager.removePlaylist(manager.mPlaylists[state.popupPlaylistIndex]);
-				ImGui::CloseCurrentPopup();
-			}
-
-			ImGui::EndPopup();
-		}
-
-		ImGui::EndChild();
-		ImGui::End();
-
-		// New Playlist Window
-		if (state.playlistWindowOpen) {
-			ImGui::SetNextWindowSize(ImVec2(350, 180));
-
-			ImGui::Begin("New Playlist", &state.playlistWindowOpen, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
-			const float windowWidth = ImGui::GetWindowSize().x;
-			const ImVec2 widgetSpacing = ImVec2(0.0f, 8.0f);
-
-			const char* labelText = "Playlist Name";
-			const float labelWidth = ImGui::CalcTextSize(labelText).x;
-			ImGui::SetCursorPosX((windowWidth - labelWidth) * 0.5f);
-			ImGui::Text(labelText);
-			ImGui::Dummy(widgetSpacing);
-
-			const float inputWidth = windowWidth * 0.8f;
-			ImGui::SetCursorPosX((windowWidth - inputWidth) * 0.5f);
-			ImGui::PushItemWidth(inputWidth);
-			ImGui::InputText("##NameInput", state.playlistName, IM_ARRAYSIZE(state.playlistName));
-			ImGui::PopItemWidth();
-
-			ImGui::Dummy(widgetSpacing);
-			ImGui::Separator();
-			ImGui::Dummy(widgetSpacing);
-
-			const float buttonWidth = 50.0f;
-			const float spacing = ImGui::GetStyle().ItemSpacing.x;
-			const float totalButtonWidth = (buttonWidth * 2) + spacing;
-			ImGui::SetCursorPosX((windowWidth - totalButtonWidth) * 0.5f);
-			if (ImGui::Button("Cancel")) {
-				state.playlistWindowOpen = false;
-				state.playlistName[0] = '\0';
-			}
-			ImGui::SameLine();
-
-			if (ImGui::Button("Create")) {
-				const std::string plName(state.playlistName);
-				manager.createPlaylist(plName);
-				state.playlistName[0] = '\0';
-			}
-
+			ImGui::EndChild();
 			ImGui::End();
-		}
 
-		// Download Window
-		if (state.downloadWindowOpen) {
-			ImGui::SetNextWindowSize(ImVec2(350, 180));
+			// New Playlist Window
+			if (state.playlistWindowOpen) {
+				ImGui::SetNextWindowSize(ImVec2(350, 180));
 
-			ImGui::Begin("Download a song", &state.downloadWindowOpen, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+				ImGui::Begin("New Playlist", &state.playlistWindowOpen, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+				const float windowWidth = ImGui::GetWindowSize().x;
+				const ImVec2 widgetSpacing = ImVec2(0.0f, 8.0f);
 
-			const float windowWidth = ImGui::GetWindowSize().x;
-			const ImVec2 widgetSpacing = ImVec2(0.0f, 8.0f);
+				const char* labelText = "Playlist Name";
+				const float labelWidth = ImGui::CalcTextSize(labelText).x;
+				ImGui::SetCursorPosX((windowWidth - labelWidth) * 0.5f);
+				ImGui::Text(labelText);
+				ImGui::Dummy(widgetSpacing);
 
-			const char* labelText = "URL";
-			const float labelWidth = ImGui::CalcTextSize(labelText).x;
-			ImGui::SetCursorPosX((windowWidth - labelWidth) * 0.5f);
-			ImGui::Text(labelText);
-			ImGui::Dummy(widgetSpacing);
+				const float inputWidth = windowWidth * 0.8f;
+				ImGui::SetCursorPosX((windowWidth - inputWidth) * 0.5f);
+				ImGui::PushItemWidth(inputWidth);
+				ImGui::InputText("##NameInput", state.playlistName, IM_ARRAYSIZE(state.playlistName));
+				ImGui::PopItemWidth();
 
-			const float inputWidth = windowWidth * 0.75f;
-			ImGui::PushItemWidth(inputWidth);
-			ImGui::InputText("##UrlInput", state.url, IM_ARRAYSIZE(state.url));
-			ImGui::PopItemWidth();
-			ImGui::SameLine();
+				ImGui::Dummy(widgetSpacing);
+				ImGui::Separator();
+				ImGui::Dummy(widgetSpacing);
 
-			ImGui::SetNextItemWidth(65.0f);
-			ImGui::Combo("##Format", &state.selectedFormat, state.formats, IM_ARRAYSIZE(state.formats));
+				const float buttonWidth = 50.0f;
+				const float spacing = ImGui::GetStyle().ItemSpacing.x;
+				const float totalButtonWidth = (buttonWidth * 2) + spacing;
+				ImGui::SetCursorPosX((windowWidth - totalButtonWidth) * 0.5f);
+				if (ImGui::Button("Cancel")) {
+					state.playlistWindowOpen = false;
+					state.playlistName[0] = '\0';
+				}
+				ImGui::SameLine();
 
-			ImGui::Dummy(widgetSpacing);
-			ImGui::Separator();
-			ImGui::Dummy(widgetSpacing);
+				if (ImGui::Button("Create")) {
+					const std::string plName(state.playlistName);
+					manager.createPlaylist(plName);
+					state.playlistName[0] = '\0';
+				}
 
-			const float buttonWidth = 50.0f;
-			const float spacing = ImGui::GetStyle().ItemSpacing.x;
-			const float totalButtonWidth = (buttonWidth * 2) + spacing;
-			ImGui::SetCursorPosX((windowWidth - totalButtonWidth) * 0.5f);
-			if (ImGui::Button("Cancel")) {
-				state.downloadWindowOpen = false;
-				state.url[0] = '\0';
-			}
-			ImGui::SameLine();
-
-			if (ImGui::Button("Download")) {
-				std::string format = std::string(state.formats[state.selectedFormat]).substr(1);
-				downloader.download(state.url, manager.getMusicDir(), format);
-				state.url[0] = '\0';
+				ImGui::End();
 			}
 
-			std::string statusText = "";
+			// Download Window
+			if (state.downloadWindowOpen) {
+				ImGui::SetNextWindowSize(ImVec2(350, 180));
 
-			switch (downloadStatus) {
-			case Downloader::DownloadStatus::Downloading:
-				statusText = "Downloading..."; break;
-			case Downloader::DownloadStatus::Failed:
-				statusText = "Download Failed"; break;
-			case Downloader::DownloadStatus::Success:
-				statusText = "Download Successful"; break;
+				ImGui::Begin("Download a song", &state.downloadWindowOpen, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+
+				const float windowWidth = ImGui::GetWindowSize().x;
+				const ImVec2 widgetSpacing = ImVec2(0.0f, 8.0f);
+
+				const char* labelText = "URL";
+				const float labelWidth = ImGui::CalcTextSize(labelText).x;
+				ImGui::SetCursorPosX((windowWidth - labelWidth) * 0.5f);
+				ImGui::Text(labelText);
+				ImGui::Dummy(widgetSpacing);
+
+				const float inputWidth = windowWidth * 0.75f;
+				ImGui::PushItemWidth(inputWidth);
+				ImGui::InputText("##UrlInput", state.url, IM_ARRAYSIZE(state.url));
+				ImGui::PopItemWidth();
+				ImGui::SameLine();
+
+				ImGui::SetNextItemWidth(65.0f);
+				ImGui::Combo("##Format", &state.selectedFormat, state.formats, IM_ARRAYSIZE(state.formats));
+
+				ImGui::Dummy(widgetSpacing);
+				ImGui::Separator();
+				ImGui::Dummy(widgetSpacing);
+
+				const float buttonWidth = 50.0f;
+				const float spacing = ImGui::GetStyle().ItemSpacing.x;
+				const float totalButtonWidth = (buttonWidth * 2) + spacing;
+				ImGui::SetCursorPosX((windowWidth - totalButtonWidth) * 0.5f);
+				if (ImGui::Button("Cancel")) {
+					state.downloadWindowOpen = false;
+					state.url[0] = '\0';
+				}
+				ImGui::SameLine();
+
+				if (ImGui::Button("Download")) {
+					std::string format = std::string(state.formats[state.selectedFormat]).substr(1);
+					downloader.download(state.url, manager.getMusicDir(), format);
+					state.url[0] = '\0';
+				}
+
+				std::string statusText = "";
+
+				switch (downloadStatus) {
+				case Downloader::DownloadStatus::Downloading:
+					statusText = "Downloading..."; break;
+				case Downloader::DownloadStatus::Failed:
+					statusText = "Download Failed"; break;
+				case Downloader::DownloadStatus::Success:
+					statusText = "Download Successful"; break;
+				}
+
+				ImGui::Text(statusText.c_str());
+
+				ImGui::End();
 			}
 
-			ImGui::Text(statusText.c_str());
+			static bool wasPlaying = false;
+			bool playing = player.isPlaying();
+			if (wasPlaying && !playing && player.hasFinished()) {
+				utils::playNextSong(state, manager, player);
+			}
+			wasPlaying = playing;
 
-			ImGui::End();
+			if (downloadStatus == Downloader::DownloadStatus::Success) {
+				manager.refreshSongs();
+			}
+
+			ImGui::Render();
+			glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT);
+			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+			glfwSwapBuffers(window);
 		}
 
-		static bool wasPlaying = false;
-		bool playing = player.isPlaying();
-		if (wasPlaying && !playing && player.hasFinished()) {
-			utils::playNextSong(state, manager, player);
-		}
-		wasPlaying = playing;
-
-		if (downloadStatus == Downloader::DownloadStatus::Success) {
-			manager.refreshSongs();
-		}
-
-		ImGui::Render();
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-		glfwSwapBuffers(window);
+		ImGui_ImplOpenGL3_Shutdown();
+		ImGui_ImplGlfw_Shutdown();
+		ImGui::DestroyContext();
+		glfwTerminate();
+		return 0;
 	}
-
-	ImGui_ImplOpenGL3_Shutdown();
-	ImGui_ImplGlfw_Shutdown();
-	ImGui::DestroyContext();
-	glfwTerminate();
-	return 0;
-}

@@ -1,4 +1,5 @@
 #include "Utils.h"
+#include "imgui.h"
 #include <format>
 #include <print>
 #include <system_error>
@@ -31,7 +32,20 @@ namespace utils {
 			state.repeatUsed = false;
 		}
 
-		if (!manager.isPlayingFomPlaylist) {
+		if (manager.playingMode == LibraryManager::PlayingMode::Queue) {
+			const int nextIndex = manager.selectedIndex + 1;
+			if (nextIndex < static_cast<int>(manager.mQueue.size())) {
+				manager.selectedIndex = nextIndex;
+				const fs::path& song = manager.mQueue[nextIndex];
+				player.play(song);
+				state.currentlyPlayingPath = song;
+				return;
+			}
+			manager.mQueue.clear();
+			manager.playingMode = LibraryManager::PlayingMode::None;
+		}
+
+		if (manager.playingMode != LibraryManager::PlayingMode::Playlist) {
 			manager.mPlayOrderIndex = (manager.mPlayOrderIndex + 1) % static_cast<int>(manager.mPlayOrder.size());
 			manager.selectedIndex = manager.getCurrentSongIndex();
 			const fs::path& song = manager.mSongs[manager.selectedIndex];
@@ -52,7 +66,18 @@ namespace utils {
 	void playPrevSong(UIState& state, LibraryManager& manager, AudioPlayer& player){
 		if (manager.mSongs.empty()) return;
 
-		if (!manager.isPlayingFomPlaylist) {
+		if (manager.playingMode == LibraryManager::PlayingMode::Queue) {
+			const int prevIndex = manager.selectedIndex - 1;
+			if (prevIndex >= 0) {
+				manager.selectedIndex = prevIndex;
+				const fs::path& song = manager.mQueue[prevIndex];
+				player.play(song);
+				state.currentlyPlayingPath = song;
+			}
+			return;
+		}
+
+		if (manager.playingMode != LibraryManager::PlayingMode::Playlist) {
 			const int size = static_cast<int>(manager.mPlayOrder.size());
 			manager.mPlayOrderIndex = (manager.mPlayOrderIndex - 1 + size) % size;
 			manager.selectedIndex = manager.getCurrentSongIndex();
@@ -111,6 +136,40 @@ namespace utils {
 	#else
 		system(("xdg-open \"" + path.string() + "\"").c_str());
 	#endif
+	}
+
+	void renderSongSelectable(const fs::path& song, LibraryManager::PlayingMode playingMode, int index, int playlistIndex, const std::string& labelSuffix, const char* popupName,
+		UIState& state, LibraryManager& manager, AudioPlayer& player)
+	{
+		const std::string label = toUtf8(song.stem()) + labelSuffix;
+		if (ImGui::Selectable(label.c_str(), song == state.currentlyPlayingPath)) {
+			if (playlistIndex == -1) {
+				manager.selectedIndex = index;
+				manager.isPlayingFomPlaylist = false;
+				if (manager.selectedPlaylist != -1) {
+					manager.mPlaylists[manager.selectedPlaylist].selectedIndex = -1;
+					manager.selectedPlaylist = -1;
+				}
+			}
+			else {
+				manager.selectedIndex = -1;
+				manager.isPlayingFomPlaylist = true;
+				manager.selectedPlaylist = playlistIndex;
+				manager.mPlaylists[playlistIndex].selectedIndex = index;
+			}
+			if (song != state.currentlyPlayingPath) {
+				player.play(song);
+				state.currentlyPlayingPath = song;
+				state.repeatUsed = false;
+			}
+			manager.playingMode = playingMode;
+		}
+
+		if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
+			ImGui::OpenPopup(popupName);
+			state.popupIndex = index;
+			state.popupPlaylistIndex = playlistIndex;
+		}
 	}
 
 	std::string toUtf8(const fs::path& path) {

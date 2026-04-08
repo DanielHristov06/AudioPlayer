@@ -16,7 +16,7 @@ LibraryManager::LibraryManager() : mMainDir(utils::getBasePath() / "AudioPlayer"
 	std::error_code ec;
 	for (const auto& entry : fs::directory_iterator(mMusicDir, ec)) {
 		if (ec) {
-			std::println("Error while iterating through the music directory: {}", ec.message());
+			std::println("Error while iterating through the music directory: {}\n", ec.message());
 			break;
 		}
 		const fs::path p(entry);
@@ -29,7 +29,7 @@ LibraryManager::LibraryManager() : mMainDir(utils::getBasePath() / "AudioPlayer"
 
 	for (const auto& entry : fs::directory_iterator(mPlaylistDir, ec)) {
 		if (ec) {
-			std::println("Error while iterating through the playlist directory: {}", ec.message());
+			std::println("Error while iterating through the playlist directory: {}\n", ec.message());
 			break;
 		}
 		std::ifstream file(entry.path());
@@ -154,13 +154,38 @@ const int LibraryManager::getCurrentSongIndex() const {
 	return mPlayOrder[mPlayOrderIndex];
 }
 
+void LibraryManager::addSongToQueue(const fs::path& songPath) {
+	if (!isSongInQueue(songPath)) {
+		mQueue.push_back(songPath);
+	}
+}
+
+bool LibraryManager::removeSongFromQueue(const fs::path& song) {
+	if (mQueue.empty()) return false;
+	const auto& it = std::find(mQueue.begin(), mQueue.end(), song);
+
+	if (it != mQueue.end()) {
+		mQueue.erase(it);
+		return true;
+	}
+
+	return false;
+}
+
+bool LibraryManager::isSongInQueue(const fs::path path) {
+	for (const auto& p : mQueue) {
+		if (p == path) return true;
+	}
+	return false;
+}
+
 bool LibraryManager::createPlaylist(const std::string& playlist) {
 	const fs::path filepath = mPlaylistDir / (playlist + ".plst");
 
 	std::ofstream file(filepath);
 
 	if (!file.is_open()) {
-		std::println("Failed to open a playlist file: {}", filepath.string());
+		std::println("Failed to open a playlist file: {}\n", filepath.string());
 		return false;
 	}
 
@@ -203,7 +228,7 @@ void LibraryManager::addSongToPlaylist(Playlist& playlist, const fs::path& songP
 		playlist.buildPlayOrder(playlist.shuffleEnabled);
 	}
 	else {
-		std::println("Failed to open playlist for appending: {}", filepath.string());
+		std::println("Failed to open playlist for appending: {}\n", filepath.string());
 	}
 
 	file.close();
@@ -218,7 +243,7 @@ bool LibraryManager::removeSongFromPlaylist(Playlist& playlist, int songIndex) c
 	const fs::path filepath = mPlaylistDir / (playlist.name + ".plst");
 	std::ofstream file(filepath, std::ios::trunc);
 	if (!file.is_open()) {
-		std::println("Failed to open playlist for rewriting: {}", filepath.string());
+		std::println("Failed to open playlist for rewriting: {}\n", filepath.string());
 	}
 
 	file << "Name: " << playlist.name << '\n';
@@ -256,7 +281,13 @@ void LibraryManager::refreshSongs() {
 
 	mSongs.clear();
 
-	for (const auto& entry : fs::directory_iterator(mMusicDir)) {
+	std::error_code ec;
+	for (const auto& entry : fs::directory_iterator(mMusicDir, ec)) {
+		if (ec) {
+			std::println("Error while refreshing the songs: {}\n", ec.message());
+			break;
+		}
+
 		const fs::path p(entry);
 		const std::string ext = reinterpret_cast<const char*>(p.extension().u8string().c_str());
 
