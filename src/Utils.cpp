@@ -145,7 +145,6 @@ namespace utils {
 		if (ImGui::Selectable(label.c_str(), song == state.currentlyPlayingPath)) {
 			if (playlistIndex == -1) {
 				manager.selectedIndex = index;
-				manager.isPlayingFomPlaylist = false;
 				if (manager.selectedPlaylist != -1) {
 					manager.mPlaylists[manager.selectedPlaylist].selectedIndex = -1;
 					manager.selectedPlaylist = -1;
@@ -153,7 +152,6 @@ namespace utils {
 			}
 			else {
 				manager.selectedIndex = -1;
-				manager.isPlayingFomPlaylist = true;
 				manager.selectedPlaylist = playlistIndex;
 				manager.mPlaylists[playlistIndex].selectedIndex = index;
 			}

@@ -36,7 +36,6 @@ public:
 	int selectedIndex = -1;
 	int mPlayOrderIndex = 0;
 	bool mShuffleEnabled = false;
-	bool isPlayingFomPlaylist = false;
 	bool refreshing = false;
 
 	bool import();
