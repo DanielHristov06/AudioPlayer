@@ -5,17 +5,23 @@
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
 #include "imgui_internal.h"
+#include "tinyfiledialogs.h"
 #include "LibraryManager.h"
 #include "AudioPlayer.h"
+#include "UIState.h"
+#include "SettingsManager.h"
 #include "Downloader.h"
 #include "TextureLoader.h"
 #include "Utils.h"
 
 int main() {
+	UIState state;
+	SettingsManager settings;
+	settings.load(state);
+
 	LibraryManager manager;
-	AudioPlayer player;
 	Downloader downloader;
-	utils::UIState state;
+	AudioPlayer player;
 
 	if (!glfwInit()) {
 		std::println("Could not initialize GLFW.\n");
@@ -127,6 +133,12 @@ int main() {
 				if (ImGui::MenuItem("Open in explorer")) {
 					utils::openInExplorer(manager.getMainDir());
 				}
+
+				ImGui::Separator();
+
+				if (ImGui::MenuItem("Options")) {
+					state.optionsWindowOpen = !state.optionsWindowOpen;
+				}
 			}
 			ImGui::EndMenuBar();
 
@@ -159,7 +171,8 @@ int main() {
 			ImGui::End();
 		}
 
-		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.08f, 0.08f, 0.08f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_WindowBg,
+			ImVec4(state.queueBckColor[0], state.queueBckColor[1], state.queueBckColor[2], state.queueBckColor[3]));
 		ImGui::Begin("Queue");
 
 		ImGui::Text("Queue:");
@@ -207,6 +220,9 @@ int main() {
 
 		ImGui::End();
 		ImGui::PopStyleColor();
+
+		ImGui::PushStyleColor(ImGuiCol_WindowBg,
+			ImVec4(state.playerColor[0], state.playerColor[1], state.playerColor[2], state.playerColor[3]));
 
 		ImGui::Begin("Player");
 		const float curPos = ImGui::GetCursorPosX();
@@ -287,9 +303,9 @@ int main() {
 		ImGui::SetCursorPos(ImVec2(nextButCurPos.x + 64.0f, nextButCurPos.y + 20.0f));
 		if (ImGui::ImageButton("RepeatButton", ImTextureRef((ImTextureID)state.repeatIcon), ImVec2(24.0f, 24.0f))) {
 			switch (state.repeatState) {
-			case utils::UIState::RepeatState::Off: state.repeatState = utils::UIState::RepeatState::Once; break;
-			case utils::UIState::RepeatState::Once: state.repeatState = utils::UIState::RepeatState::Always; break;
-			case utils::UIState::RepeatState::Always: state.repeatState = utils::UIState::RepeatState::Off; break;
+			case UIState::RepeatState::Off: state.repeatState = UIState::RepeatState::Once; break;
+			case UIState::RepeatState::Once: state.repeatState = UIState::RepeatState::Always; break;
+			case UIState::RepeatState::Always: state.repeatState = UIState::RepeatState::Off; break;
 			}
 		}
 		ImGui::PopStyleColor(3);
@@ -353,6 +369,11 @@ int main() {
 		ImGui::Text("%.0f", state.volume * 100.0f);
 
 		ImGui::End();
+
+		ImGui::PopStyleColor();
+
+		ImGui::PushStyleColor(ImGuiCol_WindowBg,
+			ImVec4(state.songsColor[0], state.songsColor[1], state.songsColor[2], state.songsColor[3]));
 
 		// Song List
 		ImGui::Begin("Songs");
@@ -451,6 +472,8 @@ int main() {
 
 			ImGui::EndChild();
 			ImGui::End();
+
+			ImGui::PopStyleColor();
 
 			// New Playlist Window
 			if (state.playlistWindowOpen) {
@@ -551,6 +574,55 @@ int main() {
 				}
 
 				ImGui::Text(statusText.c_str());
+
+				ImGui::End();
+			}
+
+			// Options Window
+			if (state.optionsWindowOpen) {
+				ImGui::Begin("Options", &state.optionsWindowOpen, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse);
+				const ImVec2 widgetSpacing = ImVec2(0.0f, 8.0f);
+				const float windowWidth = ImGui::GetWindowSize().x;
+
+				ImGui::ColorEdit4("Queue Background Color", state.queueBckColor);
+				if (ImGui::Button("Reset to default##_queueBck")) {
+					std::copy(std::begin(state.queueDefaultBckColor), std::end(state.queueDefaultBckColor), state.queueBckColor);
+				}
+
+				ImGui::Dummy(widgetSpacing);
+				ImGui::Separator();
+				ImGui::Dummy(widgetSpacing);
+
+				ImGui::ColorEdit4("Player Background Color", state.playerColor);
+				if (ImGui::Button("Reset to default##_playerBck")) {
+					std::copy(std::begin(state.playerDefaultColor), std::end(state.playerDefaultColor), state.playerColor);
+				}
+
+				ImGui::Dummy(widgetSpacing);
+				ImGui::Separator();
+				ImGui::Dummy(widgetSpacing);
+
+				ImGui::ColorEdit4("Songs Background Color", state.songsColor);
+				if (ImGui::Button("Reset to default##_songsBck")) {
+					std::copy(std::begin(state.songsDefaultColor), std::end(state.songsDefaultColor), state.songsColor);
+				}
+
+				ImGui::Dummy(widgetSpacing);
+				ImGui::Separator();
+				ImGui::Dummy(widgetSpacing);
+
+				const float buttonWidth = (ImGui::CalcTextSize("Cancel").x + ImGui::CalcTextSize("Apply").x) / 2.0f;
+				const float spacing = ImGui::GetStyle().ItemSpacing.x;
+				const float totalButtonWidth = (buttonWidth * 2) + spacing;
+				ImGui::SetCursorPosX((windowWidth - totalButtonWidth) * 0.5f);
+				if (ImGui::Button("Cancel")) {
+					state.optionsWindowOpen = false;
+				}
+				ImGui::SameLine();
+
+				if (ImGui::Button("Apply")) {
+					settings.save(state);
+				}
 
 				ImGui::End();
 			}

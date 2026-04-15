@@ -18,6 +18,11 @@ class Downloader {
 public:
 	Downloader();
 
+	Downloader(const Downloader&) = delete;
+	Downloader& operator=(const Downloader&) = delete;
+	Downloader(Downloader&&) = delete;
+	Downloader& operator=(Downloader&&) = delete;
+
 	enum class DownloadStatus { Idle, Downloading, Success, Failed };
 	bool download(const std::string& url, const fs::path& musicDir, const std::string& format);
 	DownloadStatus getDownloadStatus();
