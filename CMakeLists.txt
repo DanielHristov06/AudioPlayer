@@ -38,6 +38,7 @@ cmrc_add_resource_library(player_resources ALIAS textures NAMESPACE icons
     "textures/repeat.png"
     "textures/shuffle.png"
     "textures/search.png"
+    "textures/refresh.png"
 )
 
 if (WIN32)

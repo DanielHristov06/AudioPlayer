@@ -62,6 +62,7 @@ int main() {
 	state.repeatIcon = loadTextureFromResource("textures/repeat.png");
 	state.shuffleIcon = loadTextureFromResource("textures/shuffle.png");
 	state.searchIcon = loadTextureFromResource("textures/search.png");
+	state.refreshIcon = loadTextureFromResource("textures/refresh.png");
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -384,11 +385,11 @@ int main() {
 			ImGui::Text("Song List:");
 		}
 		else {
-			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 100.0f);
+			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 70.0f);
 			ImGui::InputText("##SearchBar", state.searchQuery, IM_ARRAYSIZE(state.searchQuery));
 		}
 
-		ImGui::SameLine(ImGui::GetContentRegionAvail().x - 90.0f + ImGui::GetCursorPosX());
+		ImGui::SameLine(ImGui::GetContentRegionAvail().x - 60.0f + ImGui::GetCursorPosX());
 
 		ImGui::PushStyleColor(ImGuiCol_Button, color);
 		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, color);
@@ -399,13 +400,13 @@ int main() {
 			if (!state.searchOpen) state.searchQuery[0] = '\0';
 		}
 
-		ImGui::PopStyleColor(3);
-
 		ImGui::SameLine();
 
-		if (ImGui::Button("Refresh")) {
+		if (ImGui::ImageButton("Refresh", ImTextureRef((ImTextureID)state.refreshIcon), ImVec2(18.0f, 18.0f))) {
 			if (!manager.refreshing) manager.refreshSongs();
 		}
+
+		ImGui::PopStyleColor(3);
 
 		ImGui::Dummy(ImVec2(0.0f, 4.0f));
 		ImGui::Separator();

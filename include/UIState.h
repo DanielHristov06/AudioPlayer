@@ -6,7 +6,7 @@ struct UIState {
 	GLuint playIcon{}, playIconHovered{};
 	GLuint pauseIcon{}, pauseIconHovered{};
 	GLuint volumeIcon{}, nextIcon{}, repeatIcon{};
-	GLuint shuffleIcon{}, searchIcon{};
+	GLuint shuffleIcon{}, searchIcon{}, refreshIcon{};
 
 	// Repeat State
 	enum class RepeatState { Off, Once, Always };
