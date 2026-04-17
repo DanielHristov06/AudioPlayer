@@ -46,7 +46,7 @@ int main() {
 
 	glfwSetFramebufferSizeCallback(window, [](GLFWwindow* window, int width, int height) {
 		glViewport(0, 0, width, height);
-		});
+	});
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		std::println("Could not initialize GLAD.\n");
@@ -61,6 +61,7 @@ int main() {
 	state.nextIcon = loadTextureFromResource("textures/next.png");
 	state.repeatIcon = loadTextureFromResource("textures/repeat.png");
 	state.shuffleIcon = loadTextureFromResource("textures/shuffle.png");
+	state.searchIcon = loadTextureFromResource("textures/search.png");
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -379,9 +380,29 @@ int main() {
 		ImGui::Begin("Songs");
 		ImGui::BeginChild("SongList", ImVec2(0, 0), true);
 
-		ImGui::Text("Song List:");
+		if (!state.searchOpen) {
+			ImGui::Text("Song List:");
+		}
+		else {
+			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 100.0f);
+			ImGui::InputText("##SearchBar", state.searchQuery, IM_ARRAYSIZE(state.searchQuery));
+		}
 
-		ImGui::SameLine(ImGui::GetContentRegionAvail().x - 60.0f + ImGui::GetCursorPosX());
+		ImGui::SameLine(ImGui::GetContentRegionAvail().x - 90.0f + ImGui::GetCursorPosX());
+
+		ImGui::PushStyleColor(ImGuiCol_Button, color);
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, color);
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, color);
+
+		if (ImGui::ImageButton("Search", ImTextureRef((ImTextureID)state.searchIcon), ImVec2(18.0f, 18.0f))) {
+			state.searchOpen = !state.searchOpen;
+			if (!state.searchOpen) state.searchQuery[0] = '\0';
+		}
+
+		ImGui::PopStyleColor(3);
+
+		ImGui::SameLine();
+
 		if (ImGui::Button("Refresh")) {
 			if (!manager.refreshing) manager.refreshSongs();
 		}
@@ -390,10 +411,26 @@ int main() {
 		ImGui::Separator();
 		ImGui::Dummy(ImVec2(0.0f, 4.0f));
 
-		if (ImGui::CollapsingHeader("All Songs")) {
-			for (int i = 0; i < static_cast<int>(manager.mSongs.size()); i++) {
-				const auto& song = manager.mSongs[i];
-				utils::renderSongSelectable(song, LibraryManager::PlayingMode::None, i, -1, "##main_" + std::to_string(i), "SongContextMenu", state, manager, player);
+		const std::string query = state.searchQuery;
+		const bool isSearching = !query.empty();
+
+		if (isSearching) {
+			if (ImGui::CollapsingHeader("All Songs")) {
+				for (size_t i = 0; i < manager.mSongs.size(); i++) {
+					const auto& song = manager.mSongs[i];
+					const std::string stem = utils::toUtf8(song.stem());
+					if (stem.find(query) != std::string::npos) {
+						utils::renderSongSelectable(song, LibraryManager::PlayingMode::None, i, -1, "##main_" + std::to_string(i), "SongContextMenu", state, manager, player);
+					}
+				}
+			}
+		}
+		else {
+			if (ImGui::CollapsingHeader("All Songs")) {
+				for (size_t i = 0; i < manager.mSongs.size(); i++) {
+					const auto& song = manager.mSongs[i];
+					utils::renderSongSelectable(song, LibraryManager::PlayingMode::None, i, -1, "##main_" + std::to_string(i), "SongContextMenu", state, manager, player);
+				}
 			}
 		}
 
@@ -401,254 +438,277 @@ int main() {
 		ImGui::Separator();
 		ImGui::Spacing();
 
-		for (int p = 0; p < static_cast<int>(manager.mPlaylists.size()); p++) {
-			auto& playlist = manager.mPlaylists[p];
-			const bool headerOpen = ImGui::CollapsingHeader(playlist.name.c_str());
-			const bool headerHovered = ImGui::IsItemHovered();
+		if (isSearching) {
+			for (size_t p = 0; manager.mPlaylists.size(); p++) {
+				auto& playlist = manager.mPlaylists[p];
+				if (playlist.name.find(query) != std::string::npos) {
+					const bool headerOpen = ImGui::CollapsingHeader(playlist.name.c_str());
+					const bool headerHovered = ImGui::IsItemHovered();
 
-			if (headerOpen) {
-				for (int i = 0; i < static_cast<int>(playlist.songs.size()); i++) {
-					const auto& song = playlist.songs[i];
-					utils::renderSongSelectable(song, LibraryManager::PlayingMode::Playlist, i, p, "##pl_" + std::to_string(p) + "_" + std::to_string(i), "SongContextMenu", state, manager, player);
-				}
+					if (headerOpen) {
+						for (int i = 0; i < static_cast<int>(playlist.songs.size()); i++) {
+							const auto& song = playlist.songs[i];
+							utils::renderSongSelectable(song, LibraryManager::PlayingMode::Playlist, i, p, "##pl_" + std::to_string(p) + "_" + std::to_string(i), "SongContextMenu", state, manager, player);
+						}
 
-				if (headerHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
-					ImGui::OpenPopup("PlaylistContextMenu");
-					state.popupPlaylistIndex = p;
-				}
-			}
-		}
-
-			if (ImGui::BeginPopup("SongContextMenu")) {
-				const fs::path& popupSong = (state.popupPlaylistIndex == -1)
-					? manager.mSongs[state.popupIndex] : manager.mPlaylists[state.popupPlaylistIndex].songs[state.popupIndex];
-
-				if (ImGui::MenuItem("Play")) {
-					player.play(popupSong);
-					state.currentlyPlayingPath = popupSong;
-					ImGui::CloseCurrentPopup();
-				}
-
-				if (state.popupPlaylistIndex == -1) {
-					if (ImGui::MenuItem("Delete")) {
-						manager.erase(manager.mSongs[state.popupIndex]);
-						ImGui::CloseCurrentPopup();
-					}
-				}
-				else {
-					if (ImGui::MenuItem("Remove from playlist")) {
-						manager.removeSongFromPlaylist(manager.mPlaylists[state.popupPlaylistIndex], state.popupIndex);
-						ImGui::CloseCurrentPopup();
-					}
-				}
-
-				ImGui::Separator();
-
-				if (ImGui::MenuItem("Add to queue")) {
-					manager.addSongToQueue(popupSong);
-				}
-
-				if (ImGui::BeginMenu("Add to playlist")) {
-					for (auto& playlist : manager.mPlaylists) {
-						const bool alreadyIn = manager.isSongInPlaylist(popupSong, playlist);
-						if (ImGui::MenuItem(playlist.name.c_str(), nullptr, false, !alreadyIn)) {
-							manager.addSongToPlaylist(playlist, popupSong);
+						if (headerHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
+							ImGui::OpenPopup("PlaylistContextMenu");
+							state.popupPlaylistIndex = p;
 						}
 					}
-
-					ImGui::EndMenu();
 				}
-				ImGui::EndPopup();
 			}
+		}
+		else {
+			for (size_t p = 0; p < manager.mPlaylists.size(); p++) {
+				auto& playlist = manager.mPlaylists[p];
+				const bool headerOpen = ImGui::CollapsingHeader(playlist.name.c_str());
+				const bool headerHovered = ImGui::IsItemHovered();
 
-			if (ImGui::BeginPopup("PlaylistContextMenu")) {
-				if (ImGui::MenuItem("Delete playlist")) {
-					manager.removePlaylist(manager.mPlaylists[state.popupPlaylistIndex]);
-					ImGui::CloseCurrentPopup();
+				if (headerOpen) {
+					for (int i = 0; i < static_cast<int>(playlist.songs.size()); i++) {
+						const auto& song = playlist.songs[i];
+						utils::renderSongSelectable(song, LibraryManager::PlayingMode::Playlist, i, p, "##pl_" + std::to_string(p) + "_" + std::to_string(i), "SongContextMenu", state, manager, player);
+					}
+
+					if (headerHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
+						ImGui::OpenPopup("PlaylistContextMenu");
+						state.popupPlaylistIndex = p;
+					}
 				}
-
-				ImGui::EndPopup();
 			}
-
-			ImGui::EndChild();
-			ImGui::End();
-
-			ImGui::PopStyleColor();
-
-			// New Playlist Window
-			if (state.playlistWindowOpen) {
-				ImGui::SetNextWindowSize(ImVec2(350, 180));
-
-				ImGui::Begin("New Playlist", &state.playlistWindowOpen, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
-				const float windowWidth = ImGui::GetWindowSize().x;
-				const ImVec2 widgetSpacing = ImVec2(0.0f, 8.0f);
-
-				const char* labelText = "Playlist Name";
-				const float labelWidth = ImGui::CalcTextSize(labelText).x;
-				ImGui::SetCursorPosX((windowWidth - labelWidth) * 0.5f);
-				ImGui::Text(labelText);
-				ImGui::Dummy(widgetSpacing);
-
-				const float inputWidth = windowWidth * 0.8f;
-				ImGui::SetCursorPosX((windowWidth - inputWidth) * 0.5f);
-				ImGui::PushItemWidth(inputWidth);
-				ImGui::InputText("##NameInput", state.playlistName, IM_ARRAYSIZE(state.playlistName));
-				ImGui::PopItemWidth();
-
-				ImGui::Dummy(widgetSpacing);
-				ImGui::Separator();
-				ImGui::Dummy(widgetSpacing);
-
-				const float buttonWidth = 50.0f;
-				const float spacing = ImGui::GetStyle().ItemSpacing.x;
-				const float totalButtonWidth = (buttonWidth * 2) + spacing;
-				ImGui::SetCursorPosX((windowWidth - totalButtonWidth) * 0.5f);
-				if (ImGui::Button("Cancel")) {
-					state.playlistWindowOpen = false;
-					state.playlistName[0] = '\0';
-				}
-				ImGui::SameLine();
-
-				if (ImGui::Button("Create")) {
-					const std::string plName(state.playlistName);
-					manager.createPlaylist(plName);
-					state.playlistName[0] = '\0';
-				}
-
-				ImGui::End();
-			}
-
-			// Download Window
-			if (state.downloadWindowOpen) {
-				ImGui::SetNextWindowSize(ImVec2(350, 180));
-
-				ImGui::Begin("Download a song", &state.downloadWindowOpen, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
-
-				const float windowWidth = ImGui::GetWindowSize().x;
-				const ImVec2 widgetSpacing = ImVec2(0.0f, 8.0f);
-
-				const char* labelText = "URL";
-				const float labelWidth = ImGui::CalcTextSize(labelText).x;
-				ImGui::SetCursorPosX((windowWidth - labelWidth) * 0.5f);
-				ImGui::Text(labelText);
-				ImGui::Dummy(widgetSpacing);
-
-				const float inputWidth = windowWidth * 0.75f;
-				ImGui::PushItemWidth(inputWidth);
-				ImGui::InputText("##UrlInput", state.url, IM_ARRAYSIZE(state.url));
-				ImGui::PopItemWidth();
-				ImGui::SameLine();
-
-				ImGui::SetNextItemWidth(65.0f);
-				ImGui::Combo("##Format", &state.selectedFormat, state.formats, IM_ARRAYSIZE(state.formats));
-
-				ImGui::Dummy(widgetSpacing);
-				ImGui::Separator();
-				ImGui::Dummy(widgetSpacing);
-
-				const float buttonWidth = 50.0f;
-				const float spacing = ImGui::GetStyle().ItemSpacing.x;
-				const float totalButtonWidth = (buttonWidth * 2) + spacing;
-				ImGui::SetCursorPosX((windowWidth - totalButtonWidth) * 0.5f);
-				if (ImGui::Button("Cancel")) {
-					state.downloadWindowOpen = false;
-					state.url[0] = '\0';
-				}
-				ImGui::SameLine();
-
-				if (ImGui::Button("Download")) {
-					std::string format = std::string(state.formats[state.selectedFormat]).substr(1);
-					downloader.download(state.url, manager.getMusicDir(), format);
-					state.url[0] = '\0';
-				}
-
-				std::string statusText = "";
-
-				switch (downloadStatus) {
-				case Downloader::DownloadStatus::Downloading:
-					statusText = "Downloading..."; break;
-				case Downloader::DownloadStatus::Failed:
-					statusText = "Download Failed"; break;
-				case Downloader::DownloadStatus::Success:
-					statusText = "Download Successful"; break;
-				}
-
-				ImGui::Text(statusText.c_str());
-
-				ImGui::End();
-			}
-
-			// Options Window
-			if (state.optionsWindowOpen) {
-				ImGui::Begin("Options", &state.optionsWindowOpen, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse);
-				const ImVec2 widgetSpacing = ImVec2(0.0f, 8.0f);
-				const float windowWidth = ImGui::GetWindowSize().x;
-
-				ImGui::ColorEdit4("Queue Background Color", state.queueBckColor);
-				if (ImGui::Button("Reset to default##_queueBck")) {
-					std::copy(std::begin(state.queueDefaultBckColor), std::end(state.queueDefaultBckColor), state.queueBckColor);
-				}
-
-				ImGui::Dummy(widgetSpacing);
-				ImGui::Separator();
-				ImGui::Dummy(widgetSpacing);
-
-				ImGui::ColorEdit4("Player Background Color", state.playerColor);
-				if (ImGui::Button("Reset to default##_playerBck")) {
-					std::copy(std::begin(state.playerDefaultColor), std::end(state.playerDefaultColor), state.playerColor);
-				}
-
-				ImGui::Dummy(widgetSpacing);
-				ImGui::Separator();
-				ImGui::Dummy(widgetSpacing);
-
-				ImGui::ColorEdit4("Songs Background Color", state.songsColor);
-				if (ImGui::Button("Reset to default##_songsBck")) {
-					std::copy(std::begin(state.songsDefaultColor), std::end(state.songsDefaultColor), state.songsColor);
-				}
-
-				ImGui::Dummy(widgetSpacing);
-				ImGui::Separator();
-				ImGui::Dummy(widgetSpacing);
-
-				const float buttonWidth = (ImGui::CalcTextSize("Cancel").x + ImGui::CalcTextSize("Apply").x) / 2.0f;
-				const float spacing = ImGui::GetStyle().ItemSpacing.x;
-				const float totalButtonWidth = (buttonWidth * 2) + spacing;
-				ImGui::SetCursorPosX((windowWidth - totalButtonWidth) * 0.5f);
-				if (ImGui::Button("Cancel")) {
-					state.optionsWindowOpen = false;
-				}
-				ImGui::SameLine();
-
-				if (ImGui::Button("Apply")) {
-					settings.save(state);
-				}
-
-				ImGui::End();
-			}
-
-			static bool wasPlaying = false;
-			bool playing = player.isPlaying();
-			if (wasPlaying && !playing && player.hasFinished()) {
-				utils::playNextSong(state, manager, player);
-			}
-			wasPlaying = playing;
-
-			if (downloadStatus == Downloader::DownloadStatus::Success) {
-				manager.refreshSongs();
-			}
-
-			ImGui::Render();
-			glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-			glClear(GL_COLOR_BUFFER_BIT);
-			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-			glfwSwapBuffers(window);
 		}
 
-		ImGui_ImplOpenGL3_Shutdown();
-		ImGui_ImplGlfw_Shutdown();
-		ImGui::DestroyContext();
-		glfwTerminate();
-		return 0;
+		if (ImGui::BeginPopup("SongContextMenu")) {
+			const fs::path& popupSong = (state.popupPlaylistIndex == -1)
+				? manager.mSongs[state.popupIndex] : manager.mPlaylists[state.popupPlaylistIndex].songs[state.popupIndex];
+
+			if (ImGui::MenuItem("Play")) {
+				player.play(popupSong);
+				state.currentlyPlayingPath = popupSong;
+				ImGui::CloseCurrentPopup();
+			}
+
+			if (state.popupPlaylistIndex == -1) {
+				if (ImGui::MenuItem("Delete")) {
+					manager.erase(manager.mSongs[state.popupIndex]);
+					ImGui::CloseCurrentPopup();
+				}
+			}
+			else {
+				if (ImGui::MenuItem("Remove from playlist")) {
+					manager.removeSongFromPlaylist(manager.mPlaylists[state.popupPlaylistIndex], state.popupIndex);
+					ImGui::CloseCurrentPopup();
+				}
+			}
+
+			ImGui::Separator();
+
+			if (ImGui::MenuItem("Add to queue")) {
+				manager.addSongToQueue(popupSong);
+			}
+
+			if (ImGui::BeginMenu("Add to playlist")) {
+				for (auto& playlist : manager.mPlaylists) {
+					const bool alreadyIn = manager.isSongInPlaylist(popupSong, playlist);
+					if (ImGui::MenuItem(playlist.name.c_str(), nullptr, false, !alreadyIn)) {
+						manager.addSongToPlaylist(playlist, popupSong);
+					}
+				}
+
+				ImGui::EndMenu();
+			}
+			ImGui::EndPopup();
+		}
+
+		if (ImGui::BeginPopup("PlaylistContextMenu")) {
+			if (ImGui::MenuItem("Delete playlist")) {
+				manager.removePlaylist(manager.mPlaylists[state.popupPlaylistIndex]);
+				ImGui::CloseCurrentPopup();
+			}
+
+			ImGui::EndPopup();
+		}
+
+		ImGui::EndChild();
+		ImGui::End();
+
+		ImGui::PopStyleColor();
+
+		// New Playlist Window
+		if (state.playlistWindowOpen) {
+			ImGui::SetNextWindowSize(ImVec2(350, 180));
+
+			ImGui::Begin("New Playlist", &state.playlistWindowOpen, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+			const float windowWidth = ImGui::GetWindowSize().x;
+			const ImVec2 widgetSpacing = ImVec2(0.0f, 8.0f);
+
+			const char* labelText = "Playlist Name";
+			const float labelWidth = ImGui::CalcTextSize(labelText).x;
+			ImGui::SetCursorPosX((windowWidth - labelWidth) * 0.5f);
+			ImGui::Text(labelText);
+			ImGui::Dummy(widgetSpacing);
+
+			const float inputWidth = windowWidth * 0.8f;
+			ImGui::SetCursorPosX((windowWidth - inputWidth) * 0.5f);
+			ImGui::PushItemWidth(inputWidth);
+			ImGui::InputText("##NameInput", state.playlistName, IM_ARRAYSIZE(state.playlistName));
+			ImGui::PopItemWidth();
+
+			ImGui::Dummy(widgetSpacing);
+			ImGui::Separator();
+			ImGui::Dummy(widgetSpacing);
+
+			const float buttonWidth = 50.0f;
+			const float spacing = ImGui::GetStyle().ItemSpacing.x;
+			const float totalButtonWidth = (buttonWidth * 2) + spacing;
+			ImGui::SetCursorPosX((windowWidth - totalButtonWidth) * 0.5f);
+			if (ImGui::Button("Cancel")) {
+				state.playlistWindowOpen = false;
+				state.playlistName[0] = '\0';
+			}
+			ImGui::SameLine();
+
+			if (ImGui::Button("Create")) {
+				const std::string plName(state.playlistName);
+				manager.createPlaylist(plName);
+				state.playlistName[0] = '\0';
+			}
+
+			ImGui::End();
+		}
+
+		// Download Window
+		if (state.downloadWindowOpen) {
+			ImGui::SetNextWindowSize(ImVec2(350, 180));
+
+			ImGui::Begin("Download a song", &state.downloadWindowOpen, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+
+			const float windowWidth = ImGui::GetWindowSize().x;
+			const ImVec2 widgetSpacing = ImVec2(0.0f, 8.0f);
+
+			const char* labelText = "URL";
+			const float labelWidth = ImGui::CalcTextSize(labelText).x;
+			ImGui::SetCursorPosX((windowWidth - labelWidth) * 0.5f);
+			ImGui::Text(labelText);
+			ImGui::Dummy(widgetSpacing);
+
+			const float inputWidth = windowWidth * 0.75f;
+			ImGui::PushItemWidth(inputWidth);
+			ImGui::InputText("##UrlInput", state.url, IM_ARRAYSIZE(state.url));
+			ImGui::PopItemWidth();
+			ImGui::SameLine();
+
+			ImGui::SetNextItemWidth(65.0f);
+			ImGui::Combo("##Format", &state.selectedFormat, state.formats, IM_ARRAYSIZE(state.formats));
+
+			ImGui::Dummy(widgetSpacing);
+			ImGui::Separator();
+			ImGui::Dummy(widgetSpacing);
+
+			const float buttonWidth = 50.0f;
+			const float spacing = ImGui::GetStyle().ItemSpacing.x;
+			const float totalButtonWidth = (buttonWidth * 2) + spacing;
+			ImGui::SetCursorPosX((windowWidth - totalButtonWidth) * 0.5f);
+			if (ImGui::Button("Cancel")) {
+				state.downloadWindowOpen = false;
+				state.url[0] = '\0';
+			}
+			ImGui::SameLine();
+
+			if (ImGui::Button("Download")) {
+				std::string format = std::string(state.formats[state.selectedFormat]).substr(1);
+				downloader.download(state.url, manager.getMusicDir(), format);
+				state.url[0] = '\0';
+			}
+
+			std::string statusText = "";
+
+			switch (downloadStatus) {
+			case Downloader::DownloadStatus::Downloading:
+				statusText = "Downloading..."; break;
+			case Downloader::DownloadStatus::Failed:
+				statusText = "Download Failed"; break;
+			case Downloader::DownloadStatus::Success:
+				statusText = "Download Successful"; break;
+			}
+
+			ImGui::Text(statusText.c_str());
+
+			ImGui::End();
+		}
+
+		// Options Window
+		if (state.optionsWindowOpen) {
+			ImGui::Begin("Options", &state.optionsWindowOpen, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse);
+			const ImVec2 widgetSpacing = ImVec2(0.0f, 8.0f);
+			const float windowWidth = ImGui::GetWindowSize().x;
+
+			ImGui::ColorEdit4("Queue Background Color", state.queueBckColor);
+			if (ImGui::Button("Reset to default##_queueBck")) {
+				std::copy(std::begin(state.queueDefaultBckColor), std::end(state.queueDefaultBckColor), state.queueBckColor);
+			}
+
+			ImGui::Dummy(widgetSpacing);
+			ImGui::Separator();
+			ImGui::Dummy(widgetSpacing);
+
+			ImGui::ColorEdit4("Player Background Color", state.playerColor);
+			if (ImGui::Button("Reset to default##_playerBck")) {
+				std::copy(std::begin(state.playerDefaultColor), std::end(state.playerDefaultColor), state.playerColor);
+			}
+
+			ImGui::Dummy(widgetSpacing);
+			ImGui::Separator();
+			ImGui::Dummy(widgetSpacing);
+
+			ImGui::ColorEdit4("Songs Background Color", state.songsColor);
+			if (ImGui::Button("Reset to default##_songsBck")) {
+				std::copy(std::begin(state.songsDefaultColor), std::end(state.songsDefaultColor), state.songsColor);
+			}
+
+			ImGui::Dummy(widgetSpacing);
+			ImGui::Separator();
+			ImGui::Dummy(widgetSpacing);
+
+			const float buttonWidth = (ImGui::CalcTextSize("Cancel").x + ImGui::CalcTextSize("Apply").x) / 2.0f;
+			const float spacing = ImGui::GetStyle().ItemSpacing.x;
+			const float totalButtonWidth = (buttonWidth * 2) + spacing;
+			ImGui::SetCursorPosX((windowWidth - totalButtonWidth) * 0.5f);
+			if (ImGui::Button("Cancel")) {
+				state.optionsWindowOpen = false;
+			}
+			ImGui::SameLine();
+
+			if (ImGui::Button("Apply")) {
+				settings.save(state);
+			}
+
+			ImGui::End();
+		}
+
+		static bool wasPlaying = false;
+		bool playing = player.isPlaying();
+		if (wasPlaying && !playing && player.hasFinished()) {
+			utils::playNextSong(state, manager, player);
+		}
+		wasPlaying = playing;
+
+		if (downloadStatus == Downloader::DownloadStatus::Success) {
+			manager.refreshSongs();
+		}
+
+		ImGui::Render();
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+		glfwSwapBuffers(window);
 	}
+
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+	glfwTerminate();
+	return 0;
+}

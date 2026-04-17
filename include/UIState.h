@@ -6,7 +6,7 @@ struct UIState {
 	GLuint playIcon{}, playIconHovered{};
 	GLuint pauseIcon{}, pauseIconHovered{};
 	GLuint volumeIcon{}, nextIcon{}, repeatIcon{};
-	GLuint shuffleIcon{};
+	GLuint shuffleIcon{}, searchIcon{};
 
 	// Repeat State
 	enum class RepeatState { Off, Once, Always };
@@ -32,6 +32,10 @@ struct UIState {
 	char url[128] = "";
 	int selectedFormat = 0;
 	const char* formats[4] = { ".mp3", ".ogg", ".wav", ".flac" };
+
+	// Search
+	bool searchOpen = false;
+	char searchQuery[128] = "";
 
 	// Options Window
 	bool optionsWindowOpen = false;
