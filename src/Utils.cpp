@@ -183,6 +183,7 @@ namespace utils {
 	}
 
 	std::string toLower(const char* input) {
+		if (input == nullptr) return {};
 		return toLower(std::string(input));
 	}
 }
