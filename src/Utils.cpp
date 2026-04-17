@@ -3,6 +3,7 @@
 #include <format>
 #include <print>
 #include <system_error>
+#include <algorithm>
 
 #if defined(_WIN32)
 #include <Windows.h>
@@ -173,5 +174,15 @@ namespace utils {
 	std::string toUtf8(const fs::path& path) {
 		const auto u8 = path.u8string();
 		return std::string(reinterpret_cast<const char*>(u8.c_str()), u8.size());
+	}
+
+	std::string toLower(std::string input) {
+		std::transform(input.begin(), input.end(), input.begin(),
+			[](unsigned char c) { return std::tolower(c); });
+		return input;
+	}
+
+	std::string toLower(const char* input) {
+		return toLower(std::string(input));
 	}
 }

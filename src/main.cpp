@@ -411,14 +411,14 @@ int main() {
 		ImGui::Separator();
 		ImGui::Dummy(ImVec2(0.0f, 4.0f));
 
-		const std::string query = state.searchQuery;
+		const std::string query = utils::toLower(state.searchQuery);
 		const bool isSearching = !query.empty();
 
 		if (isSearching) {
 			if (ImGui::CollapsingHeader("All Songs")) {
 				for (size_t i = 0; i < manager.mSongs.size(); i++) {
 					const auto& song = manager.mSongs[i];
-					const std::string stem = utils::toUtf8(song.stem());
+					const std::string stem = utils::toLower(utils::toUtf8(song.stem()));
 					if (stem.find(query) != std::string::npos) {
 						utils::renderSongSelectable(song, LibraryManager::PlayingMode::None, i, -1, "##main_" + std::to_string(i), "SongContextMenu", state, manager, player);
 					}
@@ -439,7 +439,7 @@ int main() {
 		ImGui::Spacing();
 
 		if (isSearching) {
-			for (size_t p = 0; manager.mPlaylists.size(); p++) {
+			for (size_t p = 0; p < manager.mPlaylists.size(); p++) {
 				auto& playlist = manager.mPlaylists[p];
 				if (playlist.name.find(query) != std::string::npos) {
 					const bool headerOpen = ImGui::CollapsingHeader(playlist.name.c_str());

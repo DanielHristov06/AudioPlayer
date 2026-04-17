@@ -16,4 +16,6 @@ namespace utils {
 		const std::string& labelSuffix, const char* popupName, UIState& state, LibraryManager& manager, AudioPlayer& player);
 
 	std::string toUtf8(const fs::path& path);
+	std::string toLower(std::string input);
+	std::string toLower(const char* input);
 }
