@@ -447,7 +447,7 @@ int main() {
 					const bool headerHovered = ImGui::IsItemHovered();
 
 					if (headerOpen) {
-						for (int i = 0; i < static_cast<int>(playlist.songs.size()); i++) {
+						for (size_t i = 0; i < playlist.songs.size(); i++) {
 							const auto& song = playlist.songs[i];
 							utils::renderSongSelectable(song, LibraryManager::PlayingMode::Playlist, i, p, "##pl_" + std::to_string(p) + "_" + std::to_string(i), "SongContextMenu", state, manager, player);
 						}
@@ -467,7 +467,7 @@ int main() {
 				const bool headerHovered = ImGui::IsItemHovered();
 
 				if (headerOpen) {
-					for (int i = 0; i < static_cast<int>(playlist.songs.size()); i++) {
+					for (size_t i = 0; i < playlist.songs.size(); i++) {
 						const auto& song = playlist.songs[i];
 						utils::renderSongSelectable(song, LibraryManager::PlayingMode::Playlist, i, p, "##pl_" + std::to_string(p) + "_" + std::to_string(i), "SongContextMenu", state, manager, player);
 					}
