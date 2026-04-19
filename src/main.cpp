@@ -48,6 +48,19 @@ int main() {
 		glViewport(0, 0, width, height);
 	});
 
+	glfwSetWindowUserPointer(window, &manager);
+	glfwSetDropCallback(window, [](GLFWwindow* window, int count, const char** paths) {
+		auto* mgr = static_cast<LibraryManager*>(glfwGetWindowUserPointer(window));
+		std::vector<std::filesystem::path> dropped;
+		dropped.reserve(count);
+
+		for (int i = 0; i < count; i++) {
+			dropped.emplace_back(paths[i]);
+		}
+
+		mgr->importFiles(dropped);
+	});
+
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		std::println("Could not initialize GLAD.\n");
 		return -1;
@@ -442,7 +455,7 @@ int main() {
 		if (isSearching) {
 			for (size_t p = 0; p < manager.mPlaylists.size(); p++) {
 				auto& playlist = manager.mPlaylists[p];
-				if (playlist.name.find(query) != std::string::npos) {
+				if (utils::toLower(playlist.name).find(query) != std::string::npos) {
 					const bool headerOpen = ImGui::CollapsingHeader(playlist.name.c_str());
 					const bool headerHovered = ImGui::IsItemHovered();
 

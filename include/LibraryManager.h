@@ -44,6 +44,7 @@ public:
 	bool refreshing = false;
 
 	bool import();
+	bool importFiles(const std::vector<fs::path>& paths);
 	bool erase(const fs::path& song);
 	void buildPlayOrder(bool shuffle);
 	const fs::path& getMainDir();
@@ -65,6 +66,7 @@ public:
 
 private:
 	const char* mFilters[4] = { "*.mp3", "*.wav", "*.ogg", "*.flac" };
+	const std::vector<std::string> mValidExts = { ".mp3", ".wav", ".ogg", ".flac" };
 	fs::path mMainDir{};
 	fs::path mMusicDir{};
 	fs::path mPlaylistDir{};

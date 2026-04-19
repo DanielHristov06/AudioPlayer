@@ -22,7 +22,7 @@ LibraryManager::LibraryManager() : mMainDir(utils::getBasePath() / "AudioPlayer"
 		const fs::path p(entry);
 		const std::string ext = utils::toUtf8(p.extension());
 
-		if (ext == ".mp3" || ext == ".wav" || ext == ".ogg" || ext == ".flac") {
+		if (std::find(mValidExts.begin(), mValidExts.end(), ext) != mValidExts.end()) {
 			mSongs.push_back(p);
 		}
 	}
@@ -92,6 +92,28 @@ bool LibraryManager::import() {
 		catch (const fs::filesystem_error& e) {
 			std::println("Failed to copy file:\n {}\n to {}\n because {}\n", path.string(), dst.string(), e.what());
 			return false;
+		}
+	}
+
+	return true;
+}
+
+bool LibraryManager::importFiles(const std::vector<fs::path>& paths) {
+	for (const fs::path& path : paths) {
+		const std::string ext = utils::toUtf8(path.extension());
+		const bool isValid = std::find(mValidExts.begin(), mValidExts.end(), ext) != mValidExts.end();
+		if (!isValid) continue;
+
+		const fs::path dst = mMusicDir / path.filename();
+		std::error_code ec;
+		fs::copy_file(path, dst, fs::copy_options::overwrite_existing, ec);
+
+		if (ec) {
+			std::println("Failed to copy dropped file {}\n: {}\n", path.string(), ec.message());
+		}
+
+		if (std::find(mSongs.begin(), mSongs.end(), dst) == mSongs.end()) {
+			mSongs.push_back(dst);
 		}
 	}
 
@@ -291,7 +313,7 @@ void LibraryManager::refreshSongs() {
 		const fs::path p(entry);
 		const std::string ext = reinterpret_cast<const char*>(p.extension().u8string().c_str());
 
-		if (ext == ".mp3" || ext == ".wav" || ext == ".ogg" || ext == ".flac") {
+		if (std::find(mValidExts.begin(), mValidExts.end(), ext) != mValidExts.end()) {
 			mSongs.push_back(p);
 		}
 	}
