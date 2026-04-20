@@ -159,24 +159,26 @@ int main() {
 
 			const ImGuiID dockspaceId = ImGui::GetID("Dockspace");
 
-			static bool firstTime = true;
-			if (firstTime) {
-				firstTime = false;
+			if (state.firstTime || state.rebuildDock) {
+				state.firstTime = false;
+				state.rebuildDock = false;
 
 				ImGui::DockBuilderRemoveNode(dockspaceId);
 				ImGui::DockBuilderAddNode(dockspaceId, ImGuiDockNodeFlags_DockSpace);
 				ImGui::DockBuilderSetNodeSize(dockspaceId, viewport->Size);
 
 				ImGuiID dockMain = dockspaceId;
-				ImGuiID dockBottom{}, dockLeft{};
+				ImGuiID dockBottom{}, dockSongs{};
+
+				const ImGuiDir songsPos = state.selectedSongsPos == 0 ? ImGuiDir_Left : ImGuiDir_Right;
 
 				ImGui::DockBuilderSplitNode(dockMain, ImGuiDir_Down, 0.15f, &dockBottom, &dockMain);
-				ImGui::DockBuilderSplitNode(dockMain, ImGuiDir_Left, 0.20f, &dockLeft, &dockMain);
+				ImGui::DockBuilderSplitNode(dockMain, songsPos, 0.20f, &dockSongs, &dockMain);
 				ImGui::DockBuilderGetNode(dockBottom)->LocalFlags |= ImGuiDockNodeFlags_NoTabBar;
-				ImGui::DockBuilderGetNode(dockLeft)->LocalFlags |= ImGuiDockNodeFlags_NoTabBar;
+				ImGui::DockBuilderGetNode(dockSongs)->LocalFlags |= ImGuiDockNodeFlags_NoTabBar;
 				ImGui::DockBuilderGetNode(dockMain)->LocalFlags |= ImGuiDockNodeFlags_NoTabBar;
 				ImGui::DockBuilderDockWindow("Player", dockBottom);
-				ImGui::DockBuilderDockWindow("Songs", dockLeft);
+				ImGui::DockBuilderDockWindow("Songs", dockSongs);
 				ImGui::DockBuilderDockWindow("Queue", dockMain);
 				ImGui::DockBuilderFinish(dockspaceId);
 			}
@@ -679,6 +681,14 @@ int main() {
 			ImGui::ColorEdit4("Songs Background Color", state.songsColor);
 			if (ImGui::Button("Reset to default##_songsBck")) {
 				std::copy(std::begin(state.songsDefaultColor), std::end(state.songsDefaultColor), state.songsColor);
+			}
+
+			ImGui::Dummy(widgetSpacing);
+			ImGui::Separator();
+			ImGui::Dummy(widgetSpacing);
+
+			if (ImGui::Combo("Song list position", &state.selectedSongsPos, state.songsPos, IM_ARRAYSIZE(state.songsPos))) {
+				state.rebuildDock = true;
 			}
 
 			ImGui::Dummy(widgetSpacing);

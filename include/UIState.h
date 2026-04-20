@@ -8,6 +8,9 @@ struct UIState {
 	GLuint volumeIcon{}, nextIcon{}, repeatIcon{};
 	GLuint shuffleIcon{}, searchIcon{}, refreshIcon{};
 
+	bool firstTime = true;
+	bool rebuildDock = false;
+
 	// Repeat State
 	enum class RepeatState { Off, Once, Always };
 	RepeatState repeatState = RepeatState::Off;
@@ -47,4 +50,7 @@ struct UIState {
 
 	float songsDefaultColor[4] = { 0.0588f, 0.0588f, 0.0588f, 1.0f };
 	float songsColor[4] = { 0.0588f, 0.0588f, 0.0588f, 1.0f };
+
+	int selectedSongsPos = 0;
+	const char* songsPos[2] = { "Left", "Right" };
 };
