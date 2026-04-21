@@ -194,8 +194,33 @@ bool LibraryManager::removeSongFromQueue(const fs::path& song) {
 	return false;
 }
 
-bool LibraryManager::isSongInQueue(const fs::path path) {
+bool LibraryManager::isSongInQueue(const fs::path& path) {
 	for (const auto& p : mQueue) {
+		if (p == path) return true;
+	}
+	return false;
+}
+
+void LibraryManager::addSongToLL(const fs::path& path) {
+	if (!isSongInLL(path)) {
+		mLastListened.push_back(path);
+	}
+}
+
+bool LibraryManager::removeSongFromLL(const fs::path& path) {
+	if (mLastListened.empty()) return false;
+	const auto& it = std::find(mLastListened.begin(), mLastListened.end(), path);
+
+	if (it != mLastListened.end()) {
+		mLastListened.erase(it);
+		return true;
+	}
+
+	return false;
+}
+
+bool LibraryManager::isSongInLL(const fs::path& path) {
+	for (const auto& p : mLastListened) {
 		if (p == path) return true;
 	}
 	return false;

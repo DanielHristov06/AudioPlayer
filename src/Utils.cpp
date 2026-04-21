@@ -34,6 +34,7 @@ namespace utils {
 		}
 
 		if (manager.playingMode == LibraryManager::PlayingMode::Queue) {
+			manager.addSongToLL(manager.mQueue[manager.selectedIndex]);
 			const int nextIndex = manager.selectedIndex + 1;
 			if (nextIndex < static_cast<int>(manager.mQueue.size())) {
 				manager.selectedIndex = nextIndex;
@@ -46,7 +47,19 @@ namespace utils {
 			manager.playingMode = LibraryManager::PlayingMode::None;
 		}
 
+		if (manager.playingMode == LibraryManager::PlayingMode::LastListened) {
+			const int nextIndex = manager.selectedIndex + 1;
+			if (nextIndex < static_cast<int>(manager.mLastListened.size())) {
+				manager.selectedIndex = nextIndex;
+				const fs::path& song = manager.mLastListened[nextIndex];
+				player.play(song);
+				state.currentlyPlayingPath = song;
+				return;
+			}
+		}
+
 		if (manager.playingMode != LibraryManager::PlayingMode::Playlist) {
+			manager.addSongToLL(manager.mSongs[manager.selectedIndex]);
 			manager.mPlayOrderIndex = (manager.mPlayOrderIndex + 1) % static_cast<int>(manager.mPlayOrder.size());
 			manager.selectedIndex = manager.getCurrentSongIndex();
 			const fs::path& song = manager.mSongs[manager.selectedIndex];
@@ -57,6 +70,7 @@ namespace utils {
 			Playlist& currPlaylist = manager.mPlaylists[manager.selectedPlaylist];
 			if (currPlaylist.songs.empty()) return;
 
+			manager.addSongToLL(currPlaylist.songs[currPlaylist.selectedIndex]);
 			currPlaylist.playOrderIndex = (currPlaylist.playOrderIndex + 1) % static_cast<int>(currPlaylist.playOrder.size());
 			currPlaylist.selectedIndex = currPlaylist.getCurrentSongIndex();
 			player.play(currPlaylist.songs[currPlaylist.selectedIndex]);

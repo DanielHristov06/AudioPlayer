@@ -241,6 +241,59 @@ int main() {
 			}
 		}
 
+		ImGui::Spacing();
+		ImGui::Separator();
+		ImGui::Dummy(ImVec2(0.0f, 8.0f));
+
+		ImGui::Text("Last Listened:");
+		ImGui::SameLine(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Refresh Last Listened").x - 10.0f + ImGui::GetCursorPosX());
+
+		if (ImGui::Button("Refresh Last Listened")) {
+			manager.mLastListened.clear();
+			manager.playingMode = LibraryManager::PlayingMode::None;
+		}
+
+		ImGui::Spacing();
+		ImGui::Separator();
+		ImGui::Spacing();
+
+		if (!manager.mLastListened.empty()) {
+			for (size_t i = 0; i < manager.mLastListened.size(); i++) {
+				const auto& song = manager.mLastListened[i];
+				utils::renderSongSelectable(song, LibraryManager::PlayingMode::LastListened, i, -1, "##ll_" + std::to_string(i), "LLSongContextMenu", state, manager, player);
+			}
+
+			if (ImGui::BeginPopup("LLSongContextMenu")) {
+				const fs::path& popupSong = manager.mLastListened[state.popupIndex];
+
+				if (ImGui::MenuItem("Play")) {
+					player.play(popupSong);
+					state.currentlyPlayingPath = popupSong;
+					ImGui::CloseCurrentPopup();
+				}
+
+				if (ImGui::MenuItem("Remove from Last Listened")) {
+					manager.removeSongFromLL(popupSong);
+					ImGui::CloseCurrentPopup();
+				}
+
+				ImGui::Separator();
+
+				if (ImGui::BeginMenu("Add to playlist")) {
+					for (auto& playlist : manager.mPlaylists) {
+						const bool alreadyIn = manager.isSongInPlaylist(popupSong, playlist);
+						if (ImGui::MenuItem(playlist.name.c_str(), nullptr, false, !alreadyIn)) {
+							manager.addSongToPlaylist(playlist, popupSong);
+						}
+					}
+
+					ImGui::EndMenu();
+				}
+
+				ImGui::EndPopup();
+			}
+		}
+
 		ImGui::End();
 		ImGui::PopStyleColor();
 

@@ -29,12 +29,13 @@ public:
 	LibraryManager(LibraryManager&&) = delete;
 	LibraryManager& operator=(LibraryManager&&) = delete;
 
-	enum class PlayingMode { None, Queue, Playlist };
+	enum class PlayingMode { None, Queue, LastListened, Playlist };
 	PlayingMode playingMode = PlayingMode::None;
 
 	std::vector<fs::path> mSongs;
 	std::vector<Playlist> mPlaylists;
 	std::vector<fs::path> mQueue;
+	std::vector<fs::path> mLastListened;
 	std::vector<int> mPlayOrder;
 
 	int selectedPlaylist = -1;
@@ -53,7 +54,11 @@ public:
 
 	void addSongToQueue(const fs::path& songPath);
 	bool removeSongFromQueue(const fs::path& song);
-	bool isSongInQueue(const fs::path path);
+	bool isSongInQueue(const fs::path& path);
+
+	void addSongToLL(const fs::path& path);
+	bool removeSongFromLL(const fs::path& path);
+	bool isSongInLL(const fs::path& path);
 
 	bool createPlaylist(const std::string& playlist);
 	bool removePlaylist(Playlist& playlist);
