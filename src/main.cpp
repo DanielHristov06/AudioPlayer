@@ -193,6 +193,12 @@ int main() {
 		ImGui::Begin("Queue");
 
 		ImGui::Text("Queue:");
+		ImGui::SameLine(ImGui::GetContentRegionAvail().x - 100.0f + ImGui::GetCursorPosX());
+
+		if (ImGui::Button("Refresh Queue")) {
+			manager.mQueue.clear();
+			manager.playingMode = LibraryManager::PlayingMode::None;
+		}
 
 		ImGui::Spacing();
 		ImGui::Separator();
