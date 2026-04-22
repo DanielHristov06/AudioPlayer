@@ -40,6 +40,12 @@ bool SettingsManager::load(UIState& state) {
 			std::istringstream ss(value);
 			ss >> state.selectedSongsPos;
 		}
+		else if (key == "Enable queue") {
+			state.queueEnabled = (value == "1" || value == "true");
+		}
+		else if (key == "History queue") {
+			state.historyEnabled = (value == "1" || value == "true");
+		}
 	}
 
 	file.close();
@@ -75,7 +81,10 @@ bool SettingsManager::save(const UIState& state) {
 		' ' << std::to_string(state.songsColor[3]) <<
 		'\n';
 
-	file << "Song list position: " << std::to_string(state.selectedSongsPos);
+	file << "Song list position: " << std::to_string(state.selectedSongsPos) << '\n';
+
+	file << "Enable queue: " << state.queueEnabled << '\n';
+	file << "History queue: " << state.historyEnabled << '\n';
 
 	file.close();
 	return true;

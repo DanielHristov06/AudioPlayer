@@ -192,107 +192,111 @@ int main() {
 			ImVec4(state.queueBckColor[0], state.queueBckColor[1], state.queueBckColor[2], state.queueBckColor[3]));
 		ImGui::Begin("Queue");
 
-		ImGui::Text("Queue:");
-		ImGui::SameLine(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Clear queue").x - 10.0f + ImGui::GetCursorPosX());
+		if (state.queueEnabled) {
+			ImGui::Text("Queue:");
+			ImGui::SameLine(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Clear queue").x - 10.0f + ImGui::GetCursorPosX());
 
-		if (ImGui::Button("Clear Queue")) {
-			manager.mQueue.clear();
-			manager.playingMode = LibraryManager::PlayingMode::None;
-		}
-
-		ImGui::Spacing();
-		ImGui::Separator();
-		ImGui::Spacing();
-
-		if (!manager.mQueue.empty()) {
-			for (size_t i = 0; i < manager.mQueue.size(); i++) {
-				const auto& song = manager.mQueue[i];
-				utils::renderSongSelectable(song, LibraryManager::PlayingMode::Queue, i, -1, "##queue_" + std::to_string(i), "QueueSongContextMenu", state, manager, player);
+			if (ImGui::Button("Clear Queue")) {
+				manager.mQueue.clear();
+				manager.playingMode = LibraryManager::PlayingMode::None;
 			}
 
-			if (ImGui::BeginPopup("QueueSongContextMenu")) {
-				const fs::path& popupSong = manager.mQueue[state.popupIndex];
+			ImGui::Spacing();
+			ImGui::Separator();
+			ImGui::Spacing();
 
-				if (ImGui::MenuItem("Play")) {
-					player.play(popupSong);
-					manager.addSongToHistory(popupSong);
-					state.currentlyPlayingPath = popupSong;
-					ImGui::CloseCurrentPopup();
+			if (!manager.mQueue.empty()) {
+				for (size_t i = 0; i < manager.mQueue.size(); i++) {
+					const auto& song = manager.mQueue[i];
+					utils::renderSongSelectable(song, LibraryManager::PlayingMode::Queue, i, -1, "##queue_" + std::to_string(i), "QueueSongContextMenu", state, manager, player);
 				}
 
-				if (ImGui::MenuItem("Remove from queue")) {
-					manager.removeSongFromQueue(popupSong);
-					ImGui::CloseCurrentPopup();
-				}
+				if (ImGui::BeginPopup("QueueSongContextMenu")) {
+					const fs::path& popupSong = manager.mQueue[state.popupIndex];
 
-				ImGui::Separator();
-
-				if (ImGui::BeginMenu("Add to playlist")) {
-					for (auto& playlist : manager.mPlaylists) {
-						const bool alreadyIn = manager.isSongInPlaylist(popupSong, playlist);
-						if (ImGui::MenuItem(playlist.name.c_str(), nullptr, false, !alreadyIn)) {
-							manager.addSongToPlaylist(playlist, popupSong);
-						}
+					if (ImGui::MenuItem("Play")) {
+						player.play(popupSong);
+						manager.addSongToHistory(popupSong);
+						state.currentlyPlayingPath = popupSong;
+						ImGui::CloseCurrentPopup();
 					}
 
-					ImGui::EndMenu();
-				}
-
-				ImGui::EndPopup();
-			}
-		}
-
-		ImGui::Spacing();
-		ImGui::Separator();
-		ImGui::Dummy(ImVec2(0.0f, 8.0f));
-
-		ImGui::Text("History:");
-		ImGui::SameLine(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Clear History").x - 10.0f + ImGui::GetCursorPosX());
-
-		if (ImGui::Button("Clear History")) {
-			manager.mHistory.clear();
-			manager.playingMode = LibraryManager::PlayingMode::None;
-		}
-
-		ImGui::Spacing();
-		ImGui::Separator();
-		ImGui::Spacing();
-
-		if (!manager.mHistory.empty()) {
-			for (size_t i = 0; i < manager.mHistory.size(); i++) {
-				const auto& song = manager.mHistory[i];
-				utils::renderSongSelectable(song, LibraryManager::PlayingMode::History, i, -1, "##ll_" + std::to_string(i), "HistorySongContextMenu", state, manager, player);
-			}
-
-			if (ImGui::BeginPopup("HistorySongContextMenu")) {
-				const fs::path& popupSong = manager.mHistory[state.popupIndex];
-
-				if (ImGui::MenuItem("Play")) {
-					player.play(popupSong);
-					manager.addSongToHistory(popupSong);
-					state.currentlyPlayingPath = popupSong;
-					ImGui::CloseCurrentPopup();
-				}
-
-				if (ImGui::MenuItem("Remove from History")) {
-					manager.removeSongFromHistory(popupSong);
-					ImGui::CloseCurrentPopup();
-				}
-
-				ImGui::Separator();
-
-				if (ImGui::BeginMenu("Add to playlist")) {
-					for (auto& playlist : manager.mPlaylists) {
-						const bool alreadyIn = manager.isSongInPlaylist(popupSong, playlist);
-						if (ImGui::MenuItem(playlist.name.c_str(), nullptr, false, !alreadyIn)) {
-							manager.addSongToPlaylist(playlist, popupSong);
-						}
+					if (ImGui::MenuItem("Remove from queue")) {
+						manager.removeSongFromQueue(popupSong);
+						ImGui::CloseCurrentPopup();
 					}
 
-					ImGui::EndMenu();
+					ImGui::Separator();
+
+					if (ImGui::BeginMenu("Add to playlist")) {
+						for (auto& playlist : manager.mPlaylists) {
+							const bool alreadyIn = manager.isSongInPlaylist(popupSong, playlist);
+							if (ImGui::MenuItem(playlist.name.c_str(), nullptr, false, !alreadyIn)) {
+								manager.addSongToPlaylist(playlist, popupSong);
+							}
+						}
+
+						ImGui::EndMenu();
+					}
+
+					ImGui::EndPopup();
+				}
+			}
+
+			ImGui::Spacing();
+			ImGui::Separator();
+			ImGui::Dummy(ImVec2(0.0f, 8.0f));
+		}
+
+		if (state.historyEnabled) {
+			ImGui::Text("History:");
+			ImGui::SameLine(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Clear History").x - 10.0f + ImGui::GetCursorPosX());
+
+			if (ImGui::Button("Clear History")) {
+				manager.mHistory.clear();
+				manager.playingMode = LibraryManager::PlayingMode::None;
+			}
+
+			ImGui::Spacing();
+			ImGui::Separator();
+			ImGui::Spacing();
+
+			if (!manager.mHistory.empty()) {
+				for (size_t i = 0; i < manager.mHistory.size(); i++) {
+					const auto& song = manager.mHistory[i];
+					utils::renderSongSelectable(song, LibraryManager::PlayingMode::History, i, -1, "##ll_" + std::to_string(i), "HistorySongContextMenu", state, manager, player);
 				}
 
-				ImGui::EndPopup();
+				if (ImGui::BeginPopup("HistorySongContextMenu")) {
+					const fs::path& popupSong = manager.mHistory[state.popupIndex];
+
+					if (ImGui::MenuItem("Play")) {
+						player.play(popupSong);
+						manager.addSongToHistory(popupSong);
+						state.currentlyPlayingPath = popupSong;
+						ImGui::CloseCurrentPopup();
+					}
+
+					if (ImGui::MenuItem("Remove from History")) {
+						manager.removeSongFromHistory(popupSong);
+						ImGui::CloseCurrentPopup();
+					}
+
+					ImGui::Separator();
+
+					if (ImGui::BeginMenu("Add to playlist")) {
+						for (auto& playlist : manager.mPlaylists) {
+							const bool alreadyIn = manager.isSongInPlaylist(popupSong, playlist);
+							if (ImGui::MenuItem(playlist.name.c_str(), nullptr, false, !alreadyIn)) {
+								manager.addSongToPlaylist(playlist, popupSong);
+							}
+						}
+
+						ImGui::EndMenu();
+					}
+
+					ImGui::EndPopup();
+				}
 			}
 		}
 
@@ -752,6 +756,14 @@ int main() {
 			if (ImGui::Combo("Song list position", &state.selectedSongsPos, state.songsPos, IM_ARRAYSIZE(state.songsPos))) {
 				state.rebuildDock = true;
 			}
+
+			ImGui::Dummy(widgetSpacing);
+			ImGui::Separator();
+			ImGui::Dummy(widgetSpacing);
+
+			ImGui::Checkbox("Enable queue", &state.queueEnabled);
+			ImGui::SameLine();
+			ImGui::Checkbox("Enable history", &state.historyEnabled);
 
 			ImGui::Dummy(widgetSpacing);
 			ImGui::Separator();

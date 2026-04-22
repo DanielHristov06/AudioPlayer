@@ -53,4 +53,7 @@ struct UIState {
 
 	int selectedSongsPos = 0;
 	const char* songsPos[2] = { "Left", "Right" };
+
+	bool queueEnabled = true;
+	bool historyEnabled = true;
 };
