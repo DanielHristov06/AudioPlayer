@@ -29,7 +29,7 @@ public:
 	LibraryManager(LibraryManager&&) = delete;
 	LibraryManager& operator=(LibraryManager&&) = delete;
 
-	enum class PlayingMode { None, Queue, LastListened, Playlist };
+	enum class PlayingMode { None, Queue, History, Playlist };
 	PlayingMode playingMode = PlayingMode::None;
 
 	std::vector<fs::path> mSongs;
