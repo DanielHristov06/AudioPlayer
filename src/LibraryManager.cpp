@@ -201,26 +201,26 @@ bool LibraryManager::isSongInQueue(const fs::path& path) {
 	return false;
 }
 
-void LibraryManager::addSongToLL(const fs::path& path) {
-	if (!isSongInLL(path)) {
-		mLastListened.push_back(path);
+void LibraryManager::addSongToHistory(const fs::path& path) {
+	if (!isSongInHistory(path)) {
+		mHistory.push_back(path);
 	}
 }
 
-bool LibraryManager::removeSongFromLL(const fs::path& path) {
-	if (mLastListened.empty()) return false;
-	const auto& it = std::find(mLastListened.begin(), mLastListened.end(), path);
+bool LibraryManager::removeSongFromHistory(const fs::path& path) {
+	if (mHistory.empty()) return false;
+	const auto& it = std::find(mHistory.begin(), mHistory.end(), path);
 
-	if (it != mLastListened.end()) {
-		mLastListened.erase(it);
+	if (it != mHistory.end()) {
+		mHistory.erase(it);
 		return true;
 	}
 
 	return false;
 }
 
-bool LibraryManager::isSongInLL(const fs::path& path) {
-	for (const auto& p : mLastListened) {
+bool LibraryManager::isSongInHistory(const fs::path& path) {
+	for (const auto& p : mHistory) {
 		if (p == path) return true;
 	}
 	return false;

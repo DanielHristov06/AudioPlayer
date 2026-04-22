@@ -35,7 +35,7 @@ public:
 	std::vector<fs::path> mSongs;
 	std::vector<Playlist> mPlaylists;
 	std::vector<fs::path> mQueue;
-	std::vector<fs::path> mLastListened;
+	std::vector<fs::path> mHistory;
 	std::vector<int> mPlayOrder;
 
 	int selectedPlaylist = -1;
@@ -56,9 +56,9 @@ public:
 	bool removeSongFromQueue(const fs::path& song);
 	bool isSongInQueue(const fs::path& path);
 
-	void addSongToLL(const fs::path& path);
-	bool removeSongFromLL(const fs::path& path);
-	bool isSongInLL(const fs::path& path);
+	void addSongToHistory(const fs::path& path);
+	bool removeSongFromHistory(const fs::path& path);
+	bool isSongInHistory(const fs::path& path);
 
 	bool createPlaylist(const std::string& playlist);
 	bool removePlaylist(Playlist& playlist);

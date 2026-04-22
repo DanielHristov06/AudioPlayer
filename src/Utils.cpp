@@ -34,12 +34,12 @@ namespace utils {
 		}
 
 		if (manager.playingMode == LibraryManager::PlayingMode::Queue) {
-			manager.addSongToLL(manager.mQueue[manager.selectedIndex]);
 			const int nextIndex = manager.selectedIndex + 1;
 			if (nextIndex < static_cast<int>(manager.mQueue.size())) {
 				manager.selectedIndex = nextIndex;
 				const fs::path& song = manager.mQueue[nextIndex];
 				player.play(song);
+				manager.addSongToHistory(song);
 				state.currentlyPlayingPath = song;
 				return;
 			}
@@ -47,33 +47,36 @@ namespace utils {
 			manager.playingMode = LibraryManager::PlayingMode::None;
 		}
 
-		if (manager.playingMode == LibraryManager::PlayingMode::LastListened) {
+		if (manager.playingMode == LibraryManager::PlayingMode::History) {
 			const int nextIndex = manager.selectedIndex + 1;
-			if (nextIndex < static_cast<int>(manager.mLastListened.size())) {
+			if (nextIndex < static_cast<int>(manager.mHistory.size())) {
 				manager.selectedIndex = nextIndex;
-				const fs::path& song = manager.mLastListened[nextIndex];
+				const fs::path& song = manager.mHistory[nextIndex];
 				player.play(song);
+				manager.addSongToHistory(song);
 				state.currentlyPlayingPath = song;
 				return;
 			}
 		}
 
 		if (manager.playingMode != LibraryManager::PlayingMode::Playlist) {
-			manager.addSongToLL(manager.mSongs[manager.selectedIndex]);
+			manager.addSongToHistory(manager.mSongs[manager.selectedIndex]);
 			manager.mPlayOrderIndex = (manager.mPlayOrderIndex + 1) % static_cast<int>(manager.mPlayOrder.size());
 			manager.selectedIndex = manager.getCurrentSongIndex();
 			const fs::path& song = manager.mSongs[manager.selectedIndex];
 			player.play(song);
+			manager.addSongToHistory(song);
 			state.currentlyPlayingPath = song;
 		}
 		else {
 			Playlist& currPlaylist = manager.mPlaylists[manager.selectedPlaylist];
 			if (currPlaylist.songs.empty()) return;
 
-			manager.addSongToLL(currPlaylist.songs[currPlaylist.selectedIndex]);
+			manager.addSongToHistory(currPlaylist.songs[currPlaylist.selectedIndex]);
 			currPlaylist.playOrderIndex = (currPlaylist.playOrderIndex + 1) % static_cast<int>(currPlaylist.playOrder.size());
 			currPlaylist.selectedIndex = currPlaylist.getCurrentSongIndex();
 			player.play(currPlaylist.songs[currPlaylist.selectedIndex]);
+			manager.addSongToHistory(currPlaylist.songs[currPlaylist.selectedIndex]);
 			state.currentlyPlayingPath = currPlaylist.songs[currPlaylist.selectedIndex];
 		}
 	}
@@ -172,6 +175,7 @@ namespace utils {
 			}
 			if (song != state.currentlyPlayingPath) {
 				player.play(song);
+				manager.addSongToHistory(song);
 				state.currentlyPlayingPath = song;
 				state.repeatUsed = false;
 			}
