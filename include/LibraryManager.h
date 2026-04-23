@@ -1,6 +1,7 @@
 #pragma once
 #include <filesystem>
 #include <vector>
+#include <array>
 #include <string>
 
 namespace fs = std::filesystem;
@@ -71,7 +72,7 @@ public:
 
 private:
 	const char* mFilters[4] = { "*.mp3", "*.wav", "*.ogg", "*.flac" };
-	const std::vector<std::string> mValidExts = { ".mp3", ".wav", ".ogg", ".flac" };
+	const std::array<const std::string, 4> mValidExts = { ".mp3", ".wav", ".ogg", ".flac" };
 	fs::path mMainDir{};
 	fs::path mMusicDir{};
 	fs::path mPlaylistDir{};
