@@ -1,13 +1,13 @@
 #include "TextureLoader.h"
 #include "stb_image.h"
-#include <print>
+#include "Logger.h"
 
 GLuint loadTexture(const std::string& filename) {
 	int width, height, channels;
 	stbi_uc* data = stbi_load(filename.c_str(), &width, &height, &channels, 4);
 
 	if (!data) {
-		std::println("Failed to load image: {}\n because {}\n", filename, stbi_failure_reason());
+		Logger::get().log(Logger::Level::Error, "Failed to load image: {}\n because {}\n", filename, stbi_failure_reason());
 		return 0;
 	}
 
@@ -34,7 +34,7 @@ GLuint loadTextureFromMemory(const unsigned char* data, unsigned int length) {
 	stbi_uc* pixels = stbi_load_from_memory(data, length, &width, &height, &channels, 4);
 
 	if (!pixels) {
-		printf("Failed to decode embedded image: %s\n", stbi_failure_reason());
+		Logger::get().log(Logger::Level::Error, "Failed to decode embedded image: {}", stbi_failure_reason());
 		return 0;
 	}
 
@@ -60,7 +60,7 @@ GLuint loadTextureFromResource(const std::string& internalPath) {
 	const auto fs = cmrc::icons::get_filesystem();
 
 	if (!fs.exists(internalPath)) {
-		std::println("Resource {} not found!", internalPath);
+		Logger::get().log(Logger::Level::Error, "Resource {} not found!", internalPath);
 		return 0;
 	}
 	const auto file = fs.open(internalPath);
@@ -69,7 +69,7 @@ GLuint loadTextureFromResource(const std::string& internalPath) {
 	stbi_uc* pixels = stbi_load_from_memory(reinterpret_cast<const unsigned char*>(file.begin()), file.size(), &width, &height, &channels, 4);
 
 	if (!pixels) {
-		std::println("Failed to decode resource: {} because {}", internalPath, stbi_failure_reason());
+		Logger::get().log(Logger::Level::Error, "Failed to decode resource: {} because {}", internalPath, stbi_failure_reason());
 		return 0;
 	}
 

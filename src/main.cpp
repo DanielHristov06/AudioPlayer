@@ -1,4 +1,3 @@
-#include <print>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "imgui.h"
@@ -13,6 +12,7 @@
 #include "Downloader.h"
 #include "TextureLoader.h"
 #include "Utils.h"
+#include "Logger.h"
 
 int main() {
 	UIState state;
@@ -24,7 +24,7 @@ int main() {
 	AudioPlayer player;
 
 	if (!glfwInit()) {
-		std::println("Could not initialize GLFW.\n");
+		Logger::get().log(Logger::Level::Error, "Could not initialize GLFW.\n");
 		return -1;
 	}
 
@@ -37,7 +37,7 @@ int main() {
 
 	GLFWwindow* window = glfwCreateWindow(1280, 720, "Audio Player", NULL, NULL);
 	if (!window) {
-		std::println("Failed to create a window.\n");
+		Logger::get().log(Logger::Level::Error, "Failed to create a window.\n");
 		glfwTerminate();
 		return -1;
 	}
@@ -62,7 +62,7 @@ int main() {
 	});
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-		std::println("Could not initialize GLAD.\n");
+		Logger::get().log(Logger::Level::Error, "Could not initialize GLAD.\n");
 		return -1;
 	}
 
@@ -799,6 +799,8 @@ int main() {
 
 			ImGui::End();
 		}
+
+		Logger::get().drawWindow();
 
 		static bool wasPlaying = false;
 		bool playing = player.isPlaying();

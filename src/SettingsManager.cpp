@@ -1,7 +1,7 @@
 #include "SettingsManager.h"
 #include "Utils.h"
+#include "Logger.h"
 #include <string>
-#include <print>
 #include <fstream>
 
 SettingsManager::SettingsManager() : mConfigPath(utils::getBasePath() / "AudioPlayer" / "Options.cfg") {}
@@ -10,7 +10,7 @@ bool SettingsManager::load(UIState& state) {
 	std::ifstream file(mConfigPath, std::ios::app);
 
 	if (!file.is_open()) {
-		std::println("Failed to open Options.cfg: {}\n", mConfigPath.string());
+		Logger::get().log(Logger::Level::Error, "Failed to open Options.cfg: {}\n", mConfigPath.string());
 		return false;
 	}
 
@@ -56,7 +56,7 @@ bool SettingsManager::save(const UIState& state) {
 	std::ofstream file(mConfigPath);
 
 	if (!file.is_open()) {
-		std::println("Failed to open Options.cfg: {}\n", mConfigPath.string());
+		Logger::get().log(Logger::Level::Error, "Failed to open Options.cfg: {}\n", mConfigPath.string());
 		return false;
 	}
 

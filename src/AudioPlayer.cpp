@@ -1,10 +1,10 @@
 #include "AudioPlayer.h"
 #include "Utils.h"
-#include <print>
+#include "Logger.h"
 
 AudioPlayer::AudioPlayer() : mVolume(1.0f) {
 	if (ma_engine_init(NULL, &mEngine) != MA_SUCCESS) {
-		std::println("Failed to init audio engine.\n");
+		Logger::get().log(Logger::Level::Error, "Failed to init audio engine.\n");
 		mEngineInitialized = false;
 		return;
 	}
@@ -38,16 +38,16 @@ bool AudioPlayer::play(const std::filesystem::path& path) {
 #endif
 	}
 	catch (const std::exception& e) {
-		std::println("Exception while loading sound from {}: {}\n", path.string(), e.what());
+		Logger::get().log(Logger::Level::Error, "Exception while loading sound from {}: {}\n", path.string(), e.what());
 		return false;
 	}
 	catch (...) {
-		std::println("Unknown exception while loading sound from: {}\n", path.string());
+		Logger::get().log(Logger::Level::Error, "Unknown exception while loading sound from: {}\n", path.string());
 		return false;
 	}
 
 	if (initResult != MA_SUCCESS) {
-		std::println("Failed to load sound from: {}\n", path.string());
+		Logger::get().log(Logger::Level::Error, "Failed to load sound from: {}\n", path.string());
 		return false;
 	}
 
@@ -154,7 +154,7 @@ bool AudioPlayer::setVolume(float vol) {
 
 bool AudioPlayer::checkInit() const {
 	if (!mEngineInitialized) {
-		std::println("Audio engine is not initialized.");
+		Logger::get().log(Logger::Level::Error, "Audio engine is not initialized.");
 		return false;
 	}
 	return true;

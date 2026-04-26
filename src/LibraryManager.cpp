@@ -1,7 +1,7 @@
 #include "LibraryManager.h"
 #include "tinyfiledialogs.h"
 #include "Utils.h"
-#include <print>
+#include "Logger.h"
 #include <ranges>
 #include <fstream>
 #include <system_error>
@@ -16,7 +16,7 @@ LibraryManager::LibraryManager() : mMainDir(utils::getBasePath() / "AudioPlayer"
 	std::error_code ec;
 	for (const auto& entry : fs::directory_iterator(mMusicDir, ec)) {
 		if (ec) {
-			std::println("Error while iterating through the music directory: {}\n", ec.message());
+			Logger::get().log(Logger::Level::Error, "Error while iterating through the music directory: {}\n", ec.message());
 			break;
 		}
 		const fs::path p(entry);
@@ -29,7 +29,7 @@ LibraryManager::LibraryManager() : mMainDir(utils::getBasePath() / "AudioPlayer"
 
 	for (const auto& entry : fs::directory_iterator(mPlaylistDir, ec)) {
 		if (ec) {
-			std::println("Error while iterating through the playlist directory: {}\n", ec.message());
+			Logger::get().log(Logger::Level::Error, "Error while iterating through the playlist directory: {}\n", ec.message());
 			break;
 		}
 		std::ifstream file(entry.path());
@@ -60,7 +60,7 @@ bool LibraryManager::import() {
 	const char* fp = tinyfd_openFileDialog("Select an audio file", "", 4, mFilters, "Audio files", 1);
 	
 	if (!fp) {
-		std::println("Cannot load this file.\n");
+		Logger::get().log(Logger::Level::Warning, "Cannot load this file.");
 		return false;
 	}
 
@@ -90,7 +90,7 @@ bool LibraryManager::import() {
 			}
 		}
 		catch (const fs::filesystem_error& e) {
-			std::println("Failed to copy file:\n {}\n to {}\n because {}\n", path.string(), dst.string(), e.what());
+			Logger::get().log(Logger::Level::Error, "Failed to copy file:\n {}\n to {}\n because {}", path.string(), dst.string(), e.what());
 			return false;
 		}
 	}
@@ -109,7 +109,7 @@ bool LibraryManager::importFiles(const std::vector<fs::path>& paths) {
 		fs::copy_file(path, dst, fs::copy_options::overwrite_existing, ec);
 
 		if (ec) {
-			std::println("Failed to copy dropped file {}\n: {}\n", path.string(), ec.message());
+			Logger::get().log(Logger::Level::Error, "Failed to copy dropped file {}\n: {}\n", path.string(), ec.message());
 		}
 
 		if (std::find(mSongs.begin(), mSongs.end(), dst) == mSongs.end()) {
@@ -125,7 +125,7 @@ bool LibraryManager::erase(const fs::path& song) {
 	fs::remove(song, ec);
 
 	if (ec) {
-		std::println("Failed to delete file {}\n: {}\n", song.string(), ec.message());
+		Logger::get().log(Logger::Level::Error, "Failed to delete file {}\n: {}\n", song.string(), ec.message());
 		return false;
 	}
 
@@ -226,7 +226,7 @@ bool LibraryManager::createPlaylist(const std::string& playlist) {
 	std::ofstream file(filepath);
 
 	if (!file.is_open()) {
-		std::println("Failed to open a playlist file: {}\n", filepath.string());
+		Logger::get().log(Logger::Level::Error, "Failed to open a playlist file: {}\n", filepath.string());
 		return false;
 	}
 
@@ -245,7 +245,7 @@ bool LibraryManager::removePlaylist(Playlist& playlist) {
 	fs::remove(filepath, ec);
 
 	if (ec) {
-		std::println("Failed to delete playlist {}\n: {}\n", filepath.string(), ec.message());
+		Logger::get().log(Logger::Level::Error, "Failed to delete playlist {}\n: {}\n", filepath.string(), ec.message());
 		return false;
 	}
 
@@ -269,7 +269,7 @@ void LibraryManager::addSongToPlaylist(Playlist& playlist, const fs::path& songP
 		playlist.buildPlayOrder(playlist.shuffleEnabled);
 	}
 	else {
-		std::println("Failed to open playlist for appending: {}\n", filepath.string());
+		Logger::get().log(Logger::Level::Error, "Failed to open playlist for appending: {}\n", filepath.string());
 	}
 
 	file.close();
@@ -284,7 +284,7 @@ bool LibraryManager::removeSongFromPlaylist(Playlist& playlist, int songIndex) c
 	const fs::path filepath = mPlaylistDir / (playlist.name + ".plst");
 	std::ofstream file(filepath, std::ios::trunc);
 	if (!file.is_open()) {
-		std::println("Failed to open playlist for rewriting: {}\n", filepath.string());
+		Logger::get().log(Logger::Level::Error, "Failed to open playlist for rewriting: {}\n", filepath.string());
 	}
 
 	file << "Name: " << playlist.name << '\n';
@@ -322,7 +322,7 @@ void LibraryManager::refreshSongs() {
 	std::error_code ec;
 	for (const auto& entry : fs::directory_iterator(mMusicDir, ec)) {
 		if (ec) {
-			std::println("Error while refreshing the songs: {}\n", ec.message());
+			Logger::get().log(Logger::Level::Error, "Error while refreshing the songs: {}\n", ec.message());
 			break;
 		}
 

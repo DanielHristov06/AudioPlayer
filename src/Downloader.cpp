@@ -1,6 +1,6 @@
 #include "Downloader.h"
 #include "Utils.h"
-#include <print>
+#include "Logger.h"
 #include <fstream>
 
 Downloader::Downloader() : mMainDir(utils::getBasePath() / "AudioPlayer"), mYtDlpDir(mMainDir / "yt-dlp")
@@ -30,7 +30,7 @@ bool Downloader::download(const std::string& url, const fs::path& musicDir, cons
 	if (!success) {
 		if (pi.hProcess) CloseHandle(pi.hProcess);
 		if (pi.hThread) CloseHandle(pi.hThread);
-		std::println("Failed to launch yt-dlp process. Error code: {}\n", GetLastError());
+		Logger::get().log(Logger::Level::Error, "Failed to launch yt-dlp process. Error code: {}\n", GetLastError());
 		mDownloadStatus = DownloadStatus::Failed;
 		return false;
 	}
@@ -43,7 +43,7 @@ bool Downloader::download(const std::string& url, const fs::path& musicDir, cons
 	pid_t pid = fork();
 
 	if (pid < 0) {
-		std::println("fork() failed");
+		Logger::get().log(Logger::Level::Error, "fork() failed");
 		mDownloadStatus = DownloadStatus::Failed;
 		return false;
 	}
@@ -54,7 +54,7 @@ bool Downloader::download(const std::string& url, const fs::path& musicDir, cons
 		execl(mYtDlpPath.c_str(),
 			"yt-dlp", "-x", "--audio-format", ytDlpFormat.c_str(), "--audio-quality", "0", "--windows-filenames", "--ffmpeg-location", mYtDlpDir.c_str(), "-o",
 			outputTemplate.c_str(), url.c_str(), nullptr);
-		std::println("execl(), failed - ut - dlp could not be launcehd\n");
+		Logger::get().log(Logger::Level::Error, "execl(), failed - ut - dlp could not be launcehd\n");
 		_exit(1);
 	}
 
@@ -129,7 +129,7 @@ bool Downloader::extractBinary(const std::string& resourcePath, const fs::path& 
 	const auto fileSystem = cmrc::dlp::get_filesystem();
 
 	if (!fileSystem.exists(resourcePath)) {
-		std::println("Resource not found in embedded filesystem: {}\n", resourcePath);
+		Logger::get().log(Logger::Level::Error, "Resource not found in embedded filesystem: {}\n", resourcePath);
 		return false;
 	}
 
@@ -137,7 +137,7 @@ bool Downloader::extractBinary(const std::string& resourcePath, const fs::path& 
 
 	std::ofstream out(outputPath, std::ios::binary);
 	if (!out.is_open()) {
-		std::println("Failed to open output file for extraction: {}\n", outputPath.string());
+		Logger::get().log(Logger::Level::Error, "Failed to open output file for extraction: {}\n", outputPath.string());
 		return false;
 	}
 
@@ -151,12 +151,12 @@ bool Downloader::extractBinary(const std::string& resourcePath, const fs::path& 
 		fs::perm_options::add, ec);
 
 	if (ec) {
-		std::println("Failed to set executable permissions on {}: {}\n", outputPath.string(), ec.message());
+		Logger::get().log(Logger::Level::Error, "Failed to set executable permissions on {}: {}\n", outputPath.string(), ec.message());
 		return false;
 	}
 #endif
 
-	std::println("Extracted successfully: {}\n", outputPath.string());
+	Logger::get().log(Logger::Level::Info, "Extracted successfully: {}\n", outputPath.string());
 	return true;
 }
 

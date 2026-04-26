@@ -1,7 +1,7 @@
 #include "Utils.h"
 #include "imgui.h"
+#include "Logger.h"
 #include <format>
-#include <print>
 #include <system_error>
 #include <algorithm>
 
@@ -138,11 +138,11 @@ namespace utils {
 			fs::create_directories(dir, ec);
 
 			if (ec) {
-				std::println("Failed to create directory {} : {}\n", dir.string(), ec.message());
+				Logger::get().log(Logger::Level::Error, "Failed to create directory {} : {}\n", dir.string(), ec.message());
 			}
 		}
 		else if (!fs::is_directory(dir)) {
-			std::println("Path '{}' exists but is not a directory.\n", dir.string());
+			Logger::get().log(Logger::Level::Error, "Path '{}' exists but is not a directory.\n", dir.string());
 		}
 	}
 
