@@ -31,7 +31,7 @@ public:
 		mMessage = message;
 		mLevel = level;
 
-		if (level == Logger::Level::Error || level == Logger::Level::Warning) {
+		if (level == Level::Error || level == Level::Warning) {
 			mWindowOpen = true;
 		}
 	}
