@@ -195,10 +195,7 @@ bool LibraryManager::removeSongFromQueue(const fs::path& song) {
 }
 
 bool LibraryManager::isSongInQueue(const fs::path& path) {
-	for (const auto& p : mQueue) {
-		if (p == path) return true;
-	}
-	return false;
+	return std::find(mQueue.begin(), mQueue.end(), path) != mQueue.end();
 }
 
 void LibraryManager::addSongToHistory(const fs::path& path) {
@@ -220,10 +217,7 @@ bool LibraryManager::removeSongFromHistory(const fs::path& path) {
 }
 
 bool LibraryManager::isSongInHistory(const fs::path& path) {
-	for (const auto& p : mHistory) {
-		if (p == path) return true;
-	}
-	return false;
+	return std::find(mHistory.begin(), mHistory.end(), path) != mHistory.end();
 }
 
 bool LibraryManager::createPlaylist(const std::string& playlist) {
@@ -304,10 +298,7 @@ bool LibraryManager::removeSongFromPlaylist(Playlist& playlist, int songIndex) c
 }
 
 bool LibraryManager::isSongInPlaylist(const fs::path& targetPath, const Playlist& playlist) {
-	for (const fs::path& path : playlist.songs) {
-		if (path == targetPath) return true;
-	}
-	return false;
+	return std::find(playlist.songs.begin(), playlist.songs.end(), targetPath) != playlist.songs.end();
 }
 
 void LibraryManager::setPlaylistsShuffle(bool shuffle) {

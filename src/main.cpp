@@ -179,7 +179,7 @@ int main() {
 				ImGui::DockBuilderGetNode(dockMain)->LocalFlags |= ImGuiDockNodeFlags_NoTabBar;
 				ImGui::DockBuilderDockWindow("Player", dockBottom);
 				ImGui::DockBuilderDockWindow("Songs", dockSongs);
-				ImGui::DockBuilderDockWindow("Queue", dockMain);
+				ImGui::DockBuilderDockWindow("Other", dockMain);
 				ImGui::DockBuilderFinish(dockspaceId);
 			}
 
@@ -190,9 +190,17 @@ int main() {
 
 		ImGui::PushStyleColor(ImGuiCol_WindowBg,
 			ImVec4(state.queueBckColor[0], state.queueBckColor[1], state.queueBckColor[2], state.queueBckColor[3]));
-		ImGui::Begin("Queue");
+		ImGui::Begin("Other");
+
+		const bool bothVisible = state.queueEnabled && state.historyEnabled;
+		const float otherSpacing = ImGui::GetStyle().ItemSpacing.x;
+		const float availWidth = ImGui::GetContentRegionAvail().x;
+		const float childWidth = bothVisible ? (availWidth * 0.5f - otherSpacing * 0.5f) : availWidth;
+		const float childHeight = ImGui::GetContentRegionAvail().y;
 
 		if (state.queueEnabled) {
+			ImGui::BeginChild("##QueueChild", ImVec2(childWidth, childHeight), true);
+
 			ImGui::Text("Queue:");
 			ImGui::SameLine(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Clear queue").x - 10.0f + ImGui::GetCursorPosX());
 
@@ -243,12 +251,14 @@ int main() {
 				}
 			}
 
-			ImGui::Spacing();
-			ImGui::Separator();
-			ImGui::Dummy(ImVec2(0.0f, 8.0f));
+			ImGui::EndChild();
 		}
 
 		if (state.historyEnabled) {
+			if (bothVisible) ImGui::SameLine();
+
+			ImGui::BeginChild("##HistoryChild", ImVec2(childWidth, childHeight), true);
+
 			ImGui::Text("History:");
 			ImGui::SameLine(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Clear History").x - 10.0f + ImGui::GetCursorPosX());
 
@@ -298,6 +308,8 @@ int main() {
 					ImGui::EndPopup();
 				}
 			}
+
+			ImGui::EndChild();
 		}
 
 		ImGui::End();
@@ -318,6 +330,9 @@ int main() {
 				break;
 			case LibraryManager::PlayingMode::Queue:
 				ImGui::Text("%s", utils::toUtf8(manager.mQueue[manager.selectedIndex].stem()).c_str());
+				break;
+			case LibraryManager::PlayingMode::History:
+				ImGui::Text("%s", utils::toUtf8(manager.mHistory[manager.selectedIndex].stem()).c_str());
 				break;
 			case LibraryManager::PlayingMode::Playlist:
 				const Playlist& selectedPlaylist = manager.mPlaylists[manager.selectedPlaylist];

@@ -163,6 +163,10 @@ namespace utils {
 		if (ImGui::Selectable(label.c_str(), song == state.currentlyPlayingPath)) {
 			if (playlistIndex == -1) {
 				manager.selectedIndex = index;
+				const auto it = std::find(manager.mPlayOrder.begin(), manager.mPlayOrder.end(), index);
+				if (it != manager.mPlayOrder.end()) {
+					manager.mPlayOrderIndex = static_cast<int>(std::distance(manager.mPlayOrder.begin(), it));
+				}
 				if (manager.selectedPlaylist != -1) {
 					manager.mPlaylists[manager.selectedPlaylist].selectedIndex = -1;
 					manager.selectedPlaylist = -1;
@@ -171,7 +175,12 @@ namespace utils {
 			else {
 				manager.selectedIndex = -1;
 				manager.selectedPlaylist = playlistIndex;
-				manager.mPlaylists[playlistIndex].selectedIndex = index;
+				Playlist& pl = manager.mPlaylists[playlistIndex];
+				pl.selectedIndex = index;
+				const auto it = std::find(pl.playOrder.begin(), pl.playOrder.end(), index);
+				if (it != pl.playOrder.end()) {
+					pl.playOrderIndex = static_cast<int>(std::distance(pl.playOrder.begin(), it));
+				}
 			}
 			if (song != state.currentlyPlayingPath) {
 				player.play(song);
@@ -196,7 +205,7 @@ namespace utils {
 
 	std::string toLower(std::string input) {
 		std::transform(input.begin(), input.end(), input.begin(),
-			[](unsigned char c) { return std::tolower(c); });
+			[](const unsigned char c) { return std::tolower(c); });
 		return input;
 	}
 
