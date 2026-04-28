@@ -96,7 +96,6 @@ target_sources(AudioPlayer PRIVATE
     "${VENDORS_DIR}/imgui/imgui_demo.cpp"
 )
 
-target_compile_definitions(AudioPlayer PRIVATE TEXTURE_DIR=\"${CMAKE_SOURCE_DIR}/textures\")
 target_compile_definitions(AudioPlayer PRIVATE IMGUI_IMPL_OPENGL_LOADER_GLAD GLFW_INCLUDE_NONE)
 
 target_link_libraries(AudioPlayer PRIVATE miniaudio tinyfiledialogs stbimage player_resources yt-dlp)
