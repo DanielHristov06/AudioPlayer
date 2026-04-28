@@ -61,6 +61,12 @@ endif()
 
 add_executable(AudioPlayer "${AUDIOPLAYER_SOURCES}")
 
+if (WIN32)
+    target_link_options(AudioPlayer PRIVATE
+        $<$<NOT:$<CONFIG:Debug>>:/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup>
+    )
+endif()
+
 target_compile_features(AudioPlayer PRIVATE cxx_std_23)
 
 if (MSVC)
