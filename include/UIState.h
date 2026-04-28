@@ -7,6 +7,7 @@ struct UIState {
 	GLuint pauseIcon{}, pauseIconHovered{};
 	GLuint volumeIcon{}, nextIcon{}, repeatIcon{};
 	GLuint shuffleIcon{}, searchIcon{}, refreshIcon{};
+	GLuint forwardIcon{};
 
 	bool firstTime = true;
 	bool rebuildDock = false;
@@ -53,6 +54,9 @@ struct UIState {
 
 	int selectedSongsPos = 0;
 	const char* songsPos[2] = { "Left", "Right" };
+
+	double backwardSkip = 10.0;
+	double forwardSkip = 10.0;
 
 	bool queueEnabled = true;
 	bool historyEnabled = true;

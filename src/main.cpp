@@ -76,6 +76,7 @@ int main() {
 	state.shuffleIcon = loadTextureFromResource("textures/shuffle.png");
 	state.searchIcon = loadTextureFromResource("textures/search.png");
 	state.refreshIcon = loadTextureFromResource("textures/refresh.png");
+	state.forwardIcon = loadTextureFromResource("textures/forward.png");
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -344,17 +345,66 @@ int main() {
 			ImGui::SetCursorPosX(curPos);
 		}
 
+		const ImVec4 transparent(0, 0, 0, 0);
+
+		ImGui::PushStyleColor(ImGuiCol_Button, transparent);
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, transparent);
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, transparent);
+
+		const float playSize = std::clamp(ImGui::GetWindowSize().x * 0.04f, 32.0f, 48.0f);
+		const float bigSize = 64.0f;
+		const float smallSize = 24.0f;
+		const float playerSpacing = 12.0f;
+
+		const float rowHeight = bigSize;
+
+		const float totalWidth =
+			smallSize +
+			playerSpacing + smallSize +
+			playerSpacing + bigSize +
+			playerSpacing + playSize +
+			playerSpacing + bigSize +
+			playerSpacing + smallSize +
+			playerSpacing + smallSize;
+
+		const float startX = (ImGui::GetContentRegionAvail().x - totalWidth) * 0.5f;
+
+		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + startX);
+
+		const ImVec2 rowStart = ImGui::GetCursorPos();
+
+		auto CenteredIconButton = [&](const char* id, ImTextureID texture, float size, ImVec2 uv0 = ImVec2(0, 0), ImVec2 uv1 = ImVec2(1, 1)) {
+			const float yOffset = (rowHeight - size) * 0.5f;
+			ImGui::SetCursorPosY(rowStart.y + yOffset - 10.0f);
+			return ImGui::ImageButton(id, ImTextureRef(texture), ImVec2(size, size), uv0, uv1);
+		};
+
+		// Shuffle Button
+		if (CenteredIconButton("Shuffle", (ImTextureID)state.shuffleIcon, smallSize)) {
+			manager.mShuffleEnabled = !manager.mShuffleEnabled;
+			manager.buildPlayOrder(manager.mShuffleEnabled);
+			manager.setPlaylistsShuffle(manager.mShuffleEnabled);
+		}
+
+		ImGui::SameLine(0.0f, playerSpacing);
+
+		// Backward Button
+		if (CenteredIconButton("Backward", (ImTextureID)state.forwardIcon, smallSize, ImVec2(1, 0), ImVec2(0, 1))) {
+			player.backward(state.backwardSkip);
+		}
+
+		ImGui::SameLine(0.0f, playerSpacing);
+
+		// Previous Button
+		if (CenteredIconButton("Previous", (ImTextureID)state.nextIcon, bigSize, ImVec2(1, 0), ImVec2(0, 1))) {
+			utils::playPrevSong(state, manager, player);
+		}
+
+		ImGui::SameLine(0.0f, playerSpacing);
+
 		// Play Button
-		const float size = std::clamp(ImGui::GetWindowSize().x * 0.04f, 32.0f, 48.0f);
-		const float availX = ImGui::GetContentRegionAvail().x;
-		const float offX = (availX - size) * 0.5f;
-		if (offX > 0) ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offX);
-		const ImVec4 color(0, 0, 0, 0);
-		ImGui::PushStyleColor(ImGuiCol_Button, color);
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, color);
-		ImGui::PushStyleColor(ImGuiCol_ButtonActive, color);
 		const ImVec2 pos = ImGui::GetCursorScreenPos();
-		const ImVec2 sizeVec(size, size);
+		const ImVec2 sizeVec(playSize, playSize);
 		const ImRect rect(pos, ImVec2(pos.x + sizeVec.x, pos.y + sizeVec.y));
 		bool hovered = rect.Contains(ImGui::GetIO().MousePos);
 		GLuint tex{};
@@ -365,46 +415,46 @@ int main() {
 		else {
 			tex = hovered ? state.playIconHovered : state.playIcon;
 		}
-		const ImVec2 playButPos = ImGui::GetCursorPos();
-		if (ImGui::ImageButton("PlayButton", ImTextureRef((ImTextureID)tex), ImVec2(size, size))) {
+
+		if (CenteredIconButton("PlayButton", tex, playSize)) {
 			paused ? player.resume() : player.pause();
 		}
-		ImGui::SameLine();
+
+		ImGui::SameLine(0.0f, playerSpacing);
 
 		// Next Button
-		ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 7.0f);
-		const ImVec2 nextButCurPos = ImGui::GetCursorPos();
-		if (ImGui::ImageButton("NextButton", ImTextureRef((ImTextureID)state.nextIcon), ImVec2(64.0f, 64.0f))) {
+		if (CenteredIconButton("Next", (ImTextureID)state.nextIcon, bigSize)) {
 			utils::playNextSong(state, manager, player);
 		}
-		ImGui::SameLine();
 
-		// Prev Button
-		ImGui::SetCursorPos(ImVec2(playButPos.x - size - (64.0f * 0.5f), playButPos.y - 7.0f));
-		const ImVec2 prevButCurPos = ImGui::GetCursorPos();
-		if (ImGui::ImageButton("PrevButton", ImTextureRef((ImTextureID)state.nextIcon), ImVec2(64.0f, 64.0f), ImVec2(1, 0), ImVec2(0, 1))) {
-			utils::playPrevSong(state, manager, player);
-		}
-		ImGui::SameLine();
+		ImGui::SameLine(0.0f, playerSpacing);
 
-		ImGui::SetCursorPos(ImVec2(prevButCurPos.x - 32.0f, prevButCurPos.y + 20.0f));
-		if (ImGui::ImageButton("ShuffleButton", ImTextureRef((ImTextureID)state.shuffleIcon), ImVec2(24.0f, 24.0f))) {
-			manager.mShuffleEnabled = !manager.mShuffleEnabled;
-			manager.buildPlayOrder(manager.mShuffleEnabled);
-			manager.setPlaylistsShuffle(manager.mShuffleEnabled);
+		// Forward Button
+		if (CenteredIconButton("Forward", (ImTextureID)state.forwardIcon, smallSize)) {
+			player.forward(state.forwardSkip);
 		}
 
-		ImGui::SameLine();
+		ImGui::SameLine(0.0f, playerSpacing);
 
 		// Repeat Button
-		ImGui::SetCursorPos(ImVec2(nextButCurPos.x + 64.0f, nextButCurPos.y + 20.0f));
-		if (ImGui::ImageButton("RepeatButton", ImTextureRef((ImTextureID)state.repeatIcon), ImVec2(24.0f, 24.0f))) {
+		if (CenteredIconButton("RepeatButton", (ImTextureID)state.repeatIcon, smallSize)) {
 			switch (state.repeatState) {
-			case UIState::RepeatState::Off: state.repeatState = UIState::RepeatState::Once; break;
-			case UIState::RepeatState::Once: state.repeatState = UIState::RepeatState::Always; break;
-			case UIState::RepeatState::Always: state.repeatState = UIState::RepeatState::Off; break;
+			case UIState::RepeatState::Off:
+				state.repeatState = UIState::RepeatState::Once;
+				break;
+
+			case UIState::RepeatState::Once:
+				state.repeatState = UIState::RepeatState::Always;
+				break;
+
+			case UIState::RepeatState::Always:
+				state.repeatState = UIState::RepeatState::Off;
+				break;
 			}
 		}
+
+		ImGui::SetCursorPosY(rowStart.y + rowHeight);
+
 		ImGui::PopStyleColor(3);
 
 		// Progress Bar
@@ -422,13 +472,14 @@ int main() {
 		const float totalRowWidth = textWidth + spacing + barWidth + spacing + textWidth;
 
 		const float offset = (ImGui::GetContentRegionAvail().x - totalRowWidth) * 0.5f;
-		if (offset > 0.0f) ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offset);
+		if (offset > 0.0f) ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offset + 26.5f);
 
 		ImGui::Text(leftTime.c_str());
 		ImGui::SameLine();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, -1.0f));
 		ImGui::PushItemWidth(barWidth);
+		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 2.0f);
 
 		ImGui::SliderFloat("##SongBar", &progress, 0.0f, 1.0f, "");
 
@@ -486,9 +537,9 @@ int main() {
 
 		ImGui::SameLine(ImGui::GetContentRegionAvail().x - 60.0f + ImGui::GetCursorPosX());
 
-		ImGui::PushStyleColor(ImGuiCol_Button, color);
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, color);
-		ImGui::PushStyleColor(ImGuiCol_ButtonActive, color);
+		ImGui::PushStyleColor(ImGuiCol_Button, transparent);
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, transparent);
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, transparent);
 
 		if (ImGui::ImageButton("Search", ImTextureRef((ImTextureID)state.searchIcon), ImVec2(18.0f, 18.0f))) {
 			state.searchOpen = !state.searchOpen;
@@ -779,6 +830,14 @@ int main() {
 			ImGui::Checkbox("Enable queue", &state.queueEnabled);
 			ImGui::SameLine();
 			ImGui::Checkbox("Enable history", &state.historyEnabled);
+
+			ImGui::Dummy(widgetSpacing);
+			ImGui::Separator();
+			ImGui::Dummy(widgetSpacing);
+
+			const double min = 0.1, max = 30.0;
+			ImGui::DragScalar("Forward skip seconds", ImGuiDataType_Double, &state.forwardSkip, 0.1, &min, &max, "%.2f");
+			ImGui::DragScalar("Backward skip seconds", ImGuiDataType_Double, &state.backwardSkip, 0.1, &min, &max, "%.2f");
 
 			ImGui::Dummy(widgetSpacing);
 			ImGui::Separator();

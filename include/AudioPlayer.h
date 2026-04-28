@@ -21,6 +21,8 @@ public:
 	bool isPlaying() const;
 	bool hasFinished() const;
 	bool seek(double seconds);
+	bool forward(double seconds);
+	bool backward(double seconds);
 
 	double getCurrentTime() const;
 	double getTotalTime() const;

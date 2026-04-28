@@ -123,6 +123,14 @@ bool AudioPlayer::seek(double seconds) {
 	return result == MA_SUCCESS;
 }
 
+bool AudioPlayer::forward(double seconds) {
+	return seek(getCurrentTime() + seconds);
+}
+
+bool AudioPlayer::backward(double seconds) {
+	return seek(getCurrentTime() - seconds);
+}
+
 double AudioPlayer::getCurrentTime() const {
 	if (!mHasSound || !checkInit()) return 0.0;
 

@@ -60,7 +60,6 @@ namespace utils {
 		}
 
 		if (manager.playingMode != LibraryManager::PlayingMode::Playlist) {
-			manager.addSongToHistory(manager.mSongs[manager.selectedIndex]);
 			manager.mPlayOrderIndex = (manager.mPlayOrderIndex + 1) % static_cast<int>(manager.mPlayOrder.size());
 			manager.selectedIndex = manager.getCurrentSongIndex();
 			const fs::path& song = manager.mSongs[manager.selectedIndex];
@@ -90,6 +89,7 @@ namespace utils {
 				manager.selectedIndex = prevIndex;
 				const fs::path& song = manager.mQueue[prevIndex];
 				player.play(song);
+				manager.addSongToHistory(song);
 				state.currentlyPlayingPath = song;
 			}
 			return;
@@ -102,6 +102,7 @@ namespace utils {
 
 			const fs::path& song = manager.mSongs[manager.selectedIndex];
 			player.play(song);
+			manager.addSongToHistory(song);
 			state.currentlyPlayingPath = song;
 		}
 		else {
@@ -112,6 +113,7 @@ namespace utils {
 			currPlaylist.playOrderIndex = (currPlaylist.playOrderIndex - 1 + size) % size;
 			currPlaylist.selectedIndex = currPlaylist.getCurrentSongIndex();
 			player.play(currPlaylist.songs[currPlaylist.selectedIndex]);
+			manager.addSongToHistory(currPlaylist.songs[currPlaylist.selectedIndex]);
 			state.currentlyPlayingPath = currPlaylist.songs[currPlaylist.selectedIndex];
 		}
 	}

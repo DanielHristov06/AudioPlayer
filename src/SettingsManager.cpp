@@ -46,6 +46,14 @@ bool SettingsManager::load(UIState& state) {
 		else if (key == "History queue") {
 			state.historyEnabled = (value == "1" || value == "true");
 		}
+		else if (key == "Forward seconds") {
+			std::istringstream ss(value);
+			ss >> state.forwardSkip;
+		}
+		else if (key == "Backward seconds") {
+			std::istringstream ss(value);
+			ss >> state.backwardSkip;
+		}
 	}
 
 	file.close();
@@ -85,6 +93,9 @@ bool SettingsManager::save(const UIState& state) {
 
 	file << "Enable queue: " << state.queueEnabled << '\n';
 	file << "History queue: " << state.historyEnabled << '\n';
+
+	file << "Forward seconds: " << state.forwardSkip << '\n';
+	file << "Backward seconds: " << state.backwardSkip << '\n';
 
 	file.close();
 	return true;
