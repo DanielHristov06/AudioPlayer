@@ -99,6 +99,11 @@ target_compile_definitions(AudioPlayer PRIVATE IMGUI_IMPL_OPENGL_LOADER_GLAD GLF
 
 target_link_libraries(AudioPlayer PRIVATE miniaudio tinyfiledialogs stbimage player_resources yt-dlp)
 
+if (UNIX AND NOT APPLE)
+    find_package(X11 REQUIRED)
+    target_link_libraries(AudioPlayer PRIVATE X11::X11)
+endif()
+
 if (WIN32)
     target_link_libraries(AudioPlayer PRIVATE glfw opengl32)
 else()
