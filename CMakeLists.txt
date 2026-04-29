@@ -93,7 +93,6 @@ target_sources(AudioPlayer PRIVATE
     "${VENDORS_DIR}/imgui/imgui_widgets.cpp"
     "${VENDORS_DIR}/imgui/backends/imgui_impl_glfw.cpp"
     "${VENDORS_DIR}/imgui/backends/imgui_impl_opengl3.cpp"
-    "${VENDORS_DIR}/imgui/imgui_demo.cpp"
 )
 
 target_compile_definitions(AudioPlayer PRIVATE IMGUI_IMPL_OPENGL_LOADER_GLAD GLFW_INCLUDE_NONE)

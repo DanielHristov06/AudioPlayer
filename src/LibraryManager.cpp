@@ -7,6 +7,7 @@
 #include <system_error>
 #include <numeric>
 #include <random>
+#include <algorithm>
 
 LibraryManager::LibraryManager() : mMainDir(utils::getBasePath() / "AudioPlayer"), mMusicDir(mMainDir / "Music"), mPlaylistDir(mMainDir / "Playlists") {
 	utils::createDirectory(mMainDir);
