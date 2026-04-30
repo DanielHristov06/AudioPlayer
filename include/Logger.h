@@ -43,7 +43,7 @@ private:
 	std::string mMessage;
 
 #if defined(_DEBUG)
-	static const char* getPrefix(Level level) {
+	static const char* getPrefix(Level level) noexcept {
 		switch (level) {
 		case Level::Info: return "[INFO] ";
 		case Level::Warning: return "[WARN] ";

@@ -97,8 +97,9 @@ Downloader::DownloadStatus Downloader::getDownloadStatus() {
 #endif
 }
 
-bool Downloader::isReady() const {
-	return fs::exists(mYtDlpPath) && fs::exists(mFfmpegPath);
+bool Downloader::isReady() const noexcept  {
+	std::error_code ec1, ec2;
+	return fs::exists(mYtDlpPath, ec1) && fs::exists(mFfmpegPath, ec2) && !ec1 && !ec2;
 }
 
 bool Downloader::extractYtDlp() {

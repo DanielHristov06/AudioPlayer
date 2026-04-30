@@ -6,7 +6,7 @@
 class AudioPlayer {
 public:
 	AudioPlayer();
-	~AudioPlayer();
+	~AudioPlayer() noexcept;
 
 	AudioPlayer(const AudioPlayer&) = delete;
 	AudioPlayer& operator=(const AudioPlayer&) = delete;
@@ -14,21 +14,21 @@ public:
 	AudioPlayer& operator=(AudioPlayer&&) = delete;
 
 	bool play(const std::filesystem::path& path);
-	bool stop();
-	bool pause();
-	bool resume();
-	bool isPaused() const;
-	bool isPlaying() const;
-	bool hasFinished() const;
-	bool seek(double seconds);
-	bool forward(double seconds);
-	bool backward(double seconds);
+	bool stop() noexcept;
+	bool pause() noexcept;
+	bool resume() noexcept;
+	bool isPaused() const noexcept;
+	bool isPlaying() const noexcept;
+	bool hasFinished() const noexcept;
+	bool seek(double seconds) noexcept;
+	bool forward(double seconds) noexcept;
+	bool backward(double seconds) noexcept;
 
-	double getCurrentTime() const;
-	double getTotalTime() const;
+	double getCurrentTime() const noexcept;
+	double getTotalTime() const noexcept;
 
-	float getVolume() const;
-	bool setVolume(float vol);
+	float getVolume() const noexcept;
+	bool setVolume(float vol) noexcept;
 
 private:
 	bool checkInit() const;

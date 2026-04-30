@@ -12,7 +12,7 @@ AudioPlayer::AudioPlayer() : mVolume(1.0f) {
 	mEngineInitialized = true;
 }
 
-AudioPlayer::~AudioPlayer() {
+AudioPlayer::~AudioPlayer() noexcept {
 	if (!mEngineInitialized) return;
 
 	if (mHasSound) {
@@ -58,7 +58,7 @@ bool AudioPlayer::play(const std::filesystem::path& path) {
 	return true;
 }
 
-bool AudioPlayer::stop() {
+bool AudioPlayer::stop() noexcept {
 	if (!checkInit()) return false;
 
 	if (mHasSound) {
@@ -71,7 +71,7 @@ bool AudioPlayer::stop() {
 	return false;
 }
 
-bool AudioPlayer::pause() {
+bool AudioPlayer::pause() noexcept {
 	if (!checkInit()) return false;
 
 	if (mHasSound) {
@@ -82,7 +82,7 @@ bool AudioPlayer::pause() {
 	return false;
 }
 
-bool AudioPlayer::resume() {
+bool AudioPlayer::resume() noexcept {
 	if (!checkInit()) return false;
 
 	if (mHasSound) {
@@ -93,17 +93,17 @@ bool AudioPlayer::resume() {
 	return false;
 }
 
-bool AudioPlayer::isPaused() const {
+bool AudioPlayer::isPaused() const noexcept {
 	if (!checkInit()) return false;
 	return mPaused;
 }
 
-bool AudioPlayer::isPlaying() const {
+bool AudioPlayer::isPlaying() const noexcept {
 	if (!checkInit()) return false;
 	return mHasSound && ma_sound_is_playing(&mCurrentSound);
 }
 
-bool AudioPlayer::hasFinished() const {
+bool AudioPlayer::hasFinished() const noexcept {
 	if (!mHasSound || !checkInit()) return false;
 
 	double current = getCurrentTime();
@@ -112,7 +112,7 @@ bool AudioPlayer::hasFinished() const {
 	return total > 0.0 && (total - current) < 0.05;
 }
 
-bool AudioPlayer::seek(double seconds) {
+bool AudioPlayer::seek(double seconds) noexcept {
 	if (!mHasSound || !checkInit()) return false;
 
 	if (seconds < 0.0) seconds = 0.0;
@@ -123,15 +123,15 @@ bool AudioPlayer::seek(double seconds) {
 	return result == MA_SUCCESS;
 }
 
-bool AudioPlayer::forward(double seconds) {
+bool AudioPlayer::forward(double seconds) noexcept {
 	return seek(getCurrentTime() + seconds);
 }
 
-bool AudioPlayer::backward(double seconds) {
+bool AudioPlayer::backward(double seconds) noexcept {
 	return seek(getCurrentTime() - seconds);
 }
 
-double AudioPlayer::getCurrentTime() const {
+double AudioPlayer::getCurrentTime() const noexcept {
 	if (!mHasSound || !checkInit()) return 0.0;
 
 	float cursor = 0.0f;
@@ -139,7 +139,7 @@ double AudioPlayer::getCurrentTime() const {
 	return double(cursor);
 }
 
-double AudioPlayer::getTotalTime() const {
+double AudioPlayer::getTotalTime() const noexcept {
 	if (!mHasSound || !checkInit()) return 0.0;
 
 	float length = 0.0f;
@@ -147,12 +147,12 @@ double AudioPlayer::getTotalTime() const {
 	return double(length);
 }
 
-float AudioPlayer::getVolume() const {
+float AudioPlayer::getVolume() const noexcept {
 	if (!checkInit()) return 0.0f;
 	return mVolume;
 }
 
-bool AudioPlayer::setVolume(float vol) {
+bool AudioPlayer::setVolume(float vol) noexcept {
 	if (!mHasSound || !checkInit()) return false;
 
 	ma_sound_set_volume(&mCurrentSound, vol);

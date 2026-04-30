@@ -18,7 +18,7 @@ struct Playlist {
 	bool operator==(const Playlist& other) { return filePath == other.filePath; }
 
 	void buildPlayOrder(bool shuffle);
-	const int getCurrentSongIndex() const;
+	const int getCurrentSongIndex() const noexcept;
 };
 
 class LibraryManager {
@@ -49,9 +49,9 @@ public:
 	bool importFiles(const std::vector<fs::path>& paths);
 	bool erase(const fs::path& song);
 	void buildPlayOrder(bool shuffle);
-	const fs::path& getMainDir();
-	const fs::path& getMusicDir();
-	const int getCurrentSongIndex() const;
+	const fs::path& getMainDir() noexcept;
+	const fs::path& getMusicDir() noexcept;
+	const int getCurrentSongIndex() const noexcept;
 
 	void addSongToQueue(const fs::path& songPath);
 	bool removeSongFromQueue(const fs::path& song);

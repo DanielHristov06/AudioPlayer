@@ -164,15 +164,15 @@ void LibraryManager::buildPlayOrder(bool shuffle) {
 	}
 }
 
-const fs::path& LibraryManager::getMainDir() {
+const fs::path& LibraryManager::getMainDir() noexcept {
 	return mMainDir;
 }
 
-const fs::path& LibraryManager::getMusicDir() {
+const fs::path& LibraryManager::getMusicDir() noexcept {
 	return mMusicDir;
 }
 
-const int LibraryManager::getCurrentSongIndex() const {
+const int LibraryManager::getCurrentSongIndex() const noexcept {
 	if (mPlayOrderIndex < 0 || mPlayOrderIndex >= mPlayOrder.size()) return -1;
 	return mPlayOrder[mPlayOrderIndex];
 }
@@ -371,7 +371,7 @@ void Playlist::buildPlayOrder(bool shuffle) {
 	}
 }
 
-const int Playlist::getCurrentSongIndex() const {
+const int Playlist::getCurrentSongIndex() const noexcept {
 	if (playOrderIndex < 0 || playOrderIndex >= static_cast<int>(playOrder.size())) return -1;
 	return playOrder[playOrderIndex];
 }
