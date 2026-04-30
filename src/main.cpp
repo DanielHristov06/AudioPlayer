@@ -78,7 +78,7 @@ int main() {
 	state.refreshIcon = loadTextureFromResource("textures/refresh.png");
 	state.forwardIcon = loadTextureFromResource("textures/forward.png");
 
-	static const std::string imguiIniPath = (utils::getBasePath() / "AudioPlayer" / "imgui.ini").string();
+	static const std::string imguiIniPath = (manager.getMainDir() / "imgui.ini").string();
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
