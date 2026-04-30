@@ -78,10 +78,13 @@ int main() {
 	state.refreshIcon = loadTextureFromResource("textures/refresh.png");
 	state.forwardIcon = loadTextureFromResource("textures/forward.png");
 
+	static const std::string imguiIniPath = (utils::getBasePath() / "AudioPlayer" / "imgui.ini").string();
+
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 
 	ImGuiIO& io = ImGui::GetIO();
+	io.IniFilename = imguiIniPath.c_str();
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
