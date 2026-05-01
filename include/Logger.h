@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <format>
+#include <utility>
 
 #if defined(_DEBUG)
 #include <iostream>

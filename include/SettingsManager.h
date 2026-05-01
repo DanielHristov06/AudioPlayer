@@ -1,5 +1,4 @@
 #pragma once
-#include "LibraryManager.h"
 #include "UIState.h"
 #include <filesystem>
 

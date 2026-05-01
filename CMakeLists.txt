@@ -24,9 +24,21 @@ set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_LIBS OFF CACHE BOOL "" FORCE)
 
+option(AUDIOPLAYER_USE_WAYLAND "Build GLFW with Wayland support on Linux" OFF)
+
+if (UNIX AND NOT APPLE)
+    if (AUDIOPLAYER_USE_WAYLAND)
+        set(GLFW_BUILD_WAYLAND ON CACHE BOOL "" FORCE)
+        set(GLFW_BUILD_X11 OFF CACHE BOOL "" FORCE)
+    else()
+        set(GLFW_BUILD_WAYLAND OFF CACHE BOOL "" FORCE)
+        set(GLFW_BUILD_X11 ON CACHE BOOL "" FORCE)
+    endif()
+endif()
+
 add_subdirectory("${VENDORS_DIR}/glfw")
 
-include("vendors/CmakeRC.cmake")
+include("vendors/CMakeRC.cmake")
 
 cmrc_add_resource_library(player_resources ALIAS textures NAMESPACE icons
     "textures/play.png"
@@ -99,7 +111,7 @@ target_compile_definitions(AudioPlayer PRIVATE IMGUI_IMPL_OPENGL_LOADER_GLAD GLF
 
 target_link_libraries(AudioPlayer PRIVATE miniaudio tinyfiledialogs stbimage player_resources yt-dlp)
 
-if (UNIX AND NOT APPLE)
+if (UNIX AND NOT APPLE AND NOT AUDIOPLAYER_USE_WAYLAND)
     find_package(X11 REQUIRED)
     target_link_libraries(AudioPlayer PRIVATE X11::X11)
 endif()
