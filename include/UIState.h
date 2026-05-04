@@ -11,6 +11,7 @@ struct UIState {
 
 	bool firstTime = true;
 	bool rebuildDock = false;
+	bool wasPlaying = false;
 
 	// Repeat State
 	enum class RepeatState { Off, Once, Always };
