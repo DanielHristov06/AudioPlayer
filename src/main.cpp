@@ -371,7 +371,7 @@ int main() {
 			playerSpacing + bigSize +
 			playerSpacing + playSize +
 			playerSpacing + bigSize +
-			playerSpacing + smallSize +
+			playerSpacing + bigSize +
 			playerSpacing + smallSize;
 
 		const float startX = (ImGui::GetContentRegionAvail().x - totalWidth) * 0.5f;
@@ -479,7 +479,7 @@ int main() {
 		const float totalRowWidth = textWidth + spacing + barWidth + spacing + textWidth;
 
 		const float offset = (ImGui::GetContentRegionAvail().x - totalRowWidth) * 0.5f;
-		if (offset > 0.0f) ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offset + 26.5f);
+		if (offset > 0.0f) ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offset);
 
 		ImGui::Text(leftTime.c_str());
 		ImGui::SameLine();
