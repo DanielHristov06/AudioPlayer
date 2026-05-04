@@ -15,6 +15,10 @@
 #include "Logger.h"
 
 int main() {
+	glfwSetErrorCallback([](int code, const char* description) {
+		Logger::get().log(Logger::Level::Error, "GLFW error {}: {}", code, description ? description : "Unkown error");
+	});
+
 	UIState state;
 	SettingsManager settings;
 	settings.load(state);

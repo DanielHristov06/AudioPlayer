@@ -32,9 +32,7 @@ public:
 		mMessage = message;
 		mLevel = level;
 
-		if (level == Level::Error || level == Level::Warning) {
-			mWindowOpen = true;
-		}
+		handleMessage(level, message);
 	}
 
 	void drawWindow();
@@ -42,6 +40,10 @@ public:
 private:
 	Logger() = default;
 	std::string mMessage;
+
+	void handleMessage(Level level, const std::string& message);
+	void showNativeMessageBox(Level level, const std::string& message) const;
+	bool hasImGuiContext() noexcept;
 
 #if defined(_DEBUG)
 	static const char* getPrefix(Level level) noexcept {

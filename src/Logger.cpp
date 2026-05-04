@@ -1,6 +1,7 @@
 #include "Logger.h"
 #include "Utils.h"
 #include "imgui.h"
+#include "tinyfiledialogs.h"
 
 void Logger::drawWindow() {
 	if (mMessage.empty()) return;
@@ -34,4 +35,43 @@ void Logger::drawWindow() {
 
 		ImGui::End();
 	}
+}
+
+void Logger::handleMessage(Level level, const std::string& message) {
+	mMessage = message;
+	mLevel = level;
+
+	if (level != Level::Error && level != Level::Warning) {
+		return;
+	}
+
+	if (hasImGuiContext()) mWindowOpen = true;
+	else showNativeMessageBox(level, message);
+}
+
+void Logger::showNativeMessageBox(Level level, const std::string& message) const {
+	const char* title = "Message";
+	const char* icon = "info";
+
+	switch (level)
+	{
+	case Logger::Level::Info:
+		title = "Info";
+		icon = "info";
+		break;
+	case Logger::Level::Warning:
+		title = "Warning";
+		icon = "warning";
+		break;
+	case Logger::Level::Error:
+		title = "Error";
+		icon = "error";
+		break;
+	}
+
+	tinyfd_messageBox(title, message.c_str(), "ok", icon, 1);
+}
+
+bool Logger::hasImGuiContext() noexcept {
+	return ImGui::GetCurrentContext() != nullptr;
 }
