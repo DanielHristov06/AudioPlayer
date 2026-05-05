@@ -8,6 +8,7 @@
 #include "LibraryManager.h"
 #include "AudioPlayer.h"
 #include "Downloader.h"
+#include "AppUI.h"
 
 #define OGL_VERSION_MAJOR 3
 #define OGL_VERSION_MINOR 3
@@ -17,6 +18,11 @@ class App {
 public:
 	App();
 	~App();
+
+	App(const App&) = delete;
+	App& operator=(const App&) = delete;
+	App(App&&) = delete;
+	App& operator=(App&&) = delete;
 
 	int run();
 
@@ -46,6 +52,7 @@ private:
 	LibraryManager mManager;
 	Downloader mDownloader;
 	AudioPlayer mPlayer;
+	AppUI mUI;
 
-	Downloader::DownloadStatus mDownloadStatus;
+	Downloader::DownloadStatus mDownloadStatus = Downloader::DownloadStatus::Idle;
 };
