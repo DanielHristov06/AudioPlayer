@@ -396,7 +396,7 @@ void AppUI::drawPlayer(UIState& state, LibraryManager& manager, AudioPlayer& pla
 	const float offset = (ImGui::GetContentRegionAvail().x - totalRowWidth) * 0.5f;
 	if (offset > 0.0f) ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offset);
 
-	ImGui::Text(leftTime.c_str());
+	ImGui::Text("%s", leftTime.c_str());
 	ImGui::SameLine();
 
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, -1.0f));
@@ -418,7 +418,7 @@ void AppUI::drawPlayer(UIState& state, LibraryManager& manager, AudioPlayer& pla
 	ImGui::PopItemWidth();
 	ImGui::SameLine();
 
-	ImGui::Text(rightTime.c_str());
+	ImGui::Text("%s", rightTime.c_str());
 	ImGui::SameLine();
 
 	// Volume Bar
@@ -620,7 +620,7 @@ void AppUI::drawPlaylistWindow(UIState& state, LibraryManager& manager) {
 		const char* labelText = "Playlist Name";
 		const float labelWidth = ImGui::CalcTextSize(labelText).x;
 		ImGui::SetCursorPosX((windowWidth - labelWidth) * 0.5f);
-		ImGui::Text(labelText);
+		ImGui::Text("%s", labelText);
 		ImGui::Dummy(widgetSpacing);
 
 		const float inputWidth = windowWidth * 0.8f;
@@ -665,7 +665,7 @@ void AppUI::drawDownloadWindow(UIState& state, LibraryManager& manager, Download
 		const char* labelText = "URL";
 		const float labelWidth = ImGui::CalcTextSize(labelText).x;
 		ImGui::SetCursorPosX((windowWidth - labelWidth) * 0.5f);
-		ImGui::Text(labelText);
+		ImGui::Text("%s", labelText);
 		ImGui::Dummy(widgetSpacing);
 
 		const float inputWidth = windowWidth * 0.75f;
@@ -708,7 +708,7 @@ void AppUI::drawDownloadWindow(UIState& state, LibraryManager& manager, Download
 			statusText = "Download Successful"; break;
 		}
 
-		ImGui::Text(statusText.c_str());
+		ImGui::Text("%s", statusText.c_str());
 
 		ImGui::End();
 	}

@@ -79,7 +79,7 @@ bool App::initWindow() {
 	glfwSetWindowUserPointer(mWindow, &mManager);
 	glfwSetDropCallback(mWindow, [](GLFWwindow* window, int count, const char** paths) {
 		LibraryManager* mgr = static_cast<LibraryManager*>(glfwGetWindowUserPointer(window));
-		std::vector<std::filesystem::path> dropped;
+		std::vector<fs::path> dropped;
 		dropped.reserve(count);
 
 		for (int i = 0; i < count; i++) {
